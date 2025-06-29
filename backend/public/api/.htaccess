@@ -1,0 +1,9 @@
+# Verifica se o módulo mod_rewrite está ativado
+<IfModule mod_rewrite.c>
+    # Ativa o motor de reescrita
+    RewriteEngine On
+    
+    # Redireciona todas as requisições da API para o arquivo index.php
+    # Isso permite que o Laravel processe todas as rotas da API
+    RewriteRule ^(.*)$ /index.php?/$1 [L]
+</IfModule> 

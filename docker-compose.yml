@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  # Backend - Laravel
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: signotec-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - signotec-network
+
+  # Frontend - React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: signotec-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - signotec-network
+
+  # Database - MySQL
+  db:
+    image: mysql:8.0
+    container_name: signotec-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: signotec
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: signotec
+    volumes:
+      - signotec-db-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - signotec-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: signotec-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - signotec-network
+
+networks:
+  signotec-network:
+    driver: bridge
+
+volumes:
+  signotec-db-data: 
