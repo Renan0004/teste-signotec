@@ -28,7 +28,10 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  useMediaQuery,
+  useTheme,
+  Grid
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -104,6 +107,8 @@ const DataTable = ({
   const [showFilters, setShowFilters] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [actionMenuRow, setActionMenuRow] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
@@ -187,6 +192,90 @@ const DataTable = ({
 
   const rowsPerPageOptions = [5, 10, 20, 50, 100];
 
+  // Renderizar cards para visualização mobile
+  const renderMobileCards = () => {
+    return data.map((row) => {
+      const isItemSelected = isSelected(row.id);
+      
+      return (
+        <Card 
+          key={row.id} 
+          sx={{ 
+            mb: 2, 
+            position: 'relative',
+            bgcolor: isItemSelected ? alpha(theme.palette.primary.main, 0.1) : 'inherit'
+          }}
+        >
+          {selectable && (
+            <Checkbox
+              checked={isItemSelected}
+              onChange={(event) => handleClick(event, row.id)}
+              sx={{ 
+                position: 'absolute', 
+                top: 0, 
+                right: 0, 
+                p: 1 
+              }}
+            />
+          )}
+          <CardContent sx={{ pt: 2, pb: 2 }}>
+            {columns.map((column) => {
+              // Não mostrar colunas de ações no corpo do card
+              if (column.field === 'actions') return null;
+              
+              // Renderizar conteúdo da célula
+              let cellContent = row[column.field];
+              if (column.renderCell) {
+                cellContent = column.renderCell(row);
+              }
+              
+              return (
+                <Box key={column.field} sx={{ mb: 1.5, display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
+                    {column.headerName}:
+                  </Typography>
+                  <Box>{cellContent}</Box>
+                </Box>
+              );
+            })}
+            
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              {onEdit && (
+                <IconButton 
+                  size="small" 
+                  color="primary" 
+                  onClick={() => onEdit(row)}
+                  aria-label="editar"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {onDelete && (
+                <IconButton 
+                  size="small" 
+                  color="error" 
+                  onClick={() => onDelete(row)}
+                  aria-label="excluir"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+              {actions.length > 0 && (
+                <IconButton
+                  size="small"
+                  onClick={(event) => handleActionMenuOpen(event, row)}
+                  aria-label="mais ações"
+                >
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      );
+    });
+  };
+
   return (
     <Card elevation={3}>
       <CardHeader
@@ -227,7 +316,7 @@ const DataTable = ({
                   </InputAdornment>
                 ),
               }}
-              sx={{ minWidth: 200 }}
+              sx={{ minWidth: { xs: '100%', sm: 200 }, mb: { xs: 1, sm: 0 } }}
             />
             
             <Tooltip title="Filtrar lista">
@@ -237,6 +326,7 @@ const DataTable = ({
                 onClick={() => setShowFilters(!showFilters)}
                 startIcon={<FilterListIcon />}
                 size="small"
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Filtros
               </Button>
@@ -248,9 +338,9 @@ const DataTable = ({
               <Button 
                 variant="contained" 
                 color="error" 
-                size="small" 
-                onClick={handleBulkDelete}
+                size="small"
                 startIcon={<DeleteIcon />}
+                onClick={handleBulkDelete}
               >
                 Excluir ({selected.length})
               </Button>
@@ -258,98 +348,103 @@ const DataTable = ({
           </Box>
         </StyledToolbar>
         
-        {showFilters && (
-          <Box sx={{ p: 2, display: 'flex', flexWrap: 'wrap', gap: 2, backgroundColor: alpha('#f5f5f5', 0.8) }}>
-            {filterFields.map((field) => (
-              <TextField
-                key={field.name}
-                name={field.name}
-                label={field.label}
-                size="small"
-                value={filters[field.name] || ''}
-                onChange={handleFilterChange}
-                select={field.type === 'select'}
-                SelectProps={{ native: true }}
-                sx={{ minWidth: 200 }}
-              >
-                {field.type === 'select' && (
-                  <>
-                    <option value="">Todos</option>
-                    {field.options.map((option) => (
-                      <option key={option.value} value={option.value}>
+        {/* Filtros */}
+        {showFilters && filterFields.length > 0 && (
+          <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+            <Grid container spacing={2}>
+              {filterFields.map((field) => (
+                <Grid item xs={12} sm={6} md={4} key={field.name}>
+                  <TextField
+                    name={field.name}
+                    label={field.label}
+                    size="small"
+                    fullWidth
+                    value={filters[field.name] || ''}
+                    onChange={handleFilterChange}
+                    type={field.type || 'text'}
+                    select={field.options ? true : false}
+                  >
+                    {field.options && field.options.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
                         {option.label}
-                      </option>
+                      </MenuItem>
                     ))}
-                  </>
-                )}
-              </TextField>
-            ))}
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={applyFilters}
-              size="small"
-            >
-              Aplicar Filtros
-            </Button>
+                  </TextField>
+                </Grid>
+              ))}
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+                  <Button 
+                    variant="outlined" 
+                    color="inherit" 
+                    size="small"
+                    onClick={() => {
+                      setFilters({});
+                      onFilter && onFilter({});
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    size="small"
+                    onClick={applyFilters}
+                  >
+                    Aplicar Filtros
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
         )}
 
-        <TableContainer>
-          <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-            <TableHead>
-              <TableRow>
-                {selectable && (
-                  <StyledTableHeadCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={selected.length > 0 && selected.length < data.length}
-                      checked={data.length > 0 && selected.length === data.length}
-                      onChange={handleSelectAllClick}
-                    />
-                  </StyledTableHeadCell>
-                )}
-                {columns.map((column) => (
-                  <StyledTableHeadCell
-                    key={column.field}
-                    align={column.align || 'left'}
-                    sortDirection={orderBy === column.field ? order : false}
-                    style={{ minWidth: column.minWidth }}
-                  >
-                    {column.sortable !== false ? (
-                      <TableSortLabel
-                        active={orderBy === column.field}
-                        direction={orderBy === column.field ? order : 'asc'}
-                        onClick={() => handleRequestSort(column.field)}
-                      >
-                        {column.headerName}
-                      </TableSortLabel>
-                    ) : (
-                      column.headerName
-                    )}
-                  </StyledTableHeadCell>
-                ))}
-                <StyledTableHeadCell align="right">Ações</StyledTableHeadCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
+        {/* Visualização para dispositivos móveis */}
+        {isMobile ? (
+          <Box sx={{ p: 2 }}>
+            {renderMobileCards()}
+          </Box>
+        ) : (
+          /* Visualização para desktop - tabela tradicional */
+          <TableContainer>
+            <Table size="medium">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={columns.length + (selectable ? 2 : 1)} align="center">
-                    <Typography variant="body1" sx={{ py: 5 }}>Carregando...</Typography>
-                  </TableCell>
+                  {selectable && (
+                    <StyledTableHeadCell padding="checkbox">
+                      <Checkbox
+                        indeterminate={selected.length > 0 && selected.length < data.length}
+                        checked={data.length > 0 && selected.length === data.length}
+                        onChange={handleSelectAllClick}
+                      />
+                    </StyledTableHeadCell>
+                  )}
+                  {columns.map((column) => (
+                    <StyledTableHeadCell
+                      key={column.field}
+                      sortDirection={orderBy === column.field ? order : false}
+                      align={column.align || 'left'}
+                      style={{ minWidth: column.minWidth }}
+                    >
+                      {column.sortable !== false ? (
+                        <TableSortLabel
+                          active={orderBy === column.field}
+                          direction={orderBy === column.field ? order : 'asc'}
+                          onClick={() => handleRequestSort(column.field)}
+                        >
+                          {column.headerName}
+                        </TableSortLabel>
+                      ) : (
+                        column.headerName
+                      )}
+                    </StyledTableHeadCell>
+                  ))}
                 </TableRow>
-              ) : data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + (selectable ? 2 : 1)} align="center">
-                    <Typography variant="body1" sx={{ py: 5 }}>Nenhum registro encontrado</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data.map((row, index) => {
+              </TableHead>
+              <TableBody>
+                {data.map((row) => {
                   const isItemSelected = isSelected(row.id);
-                  const labelId = `enhanced-table-checkbox-${index}`;
-
+                  
                   return (
                     <StyledTableRow
                       hover
@@ -362,124 +457,24 @@ const DataTable = ({
                     >
                       {selectable && (
                         <StyledTableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              'aria-labelledby': labelId,
-                            }}
-                          />
+                          <Checkbox checked={isItemSelected} />
                         </StyledTableCell>
                       )}
                       {columns.map((column) => {
-                        const value = row[column.field];
                         return (
-                          <StyledTableCell 
-                            key={column.field} 
-                            align={column.align || 'left'}
-                          >
-                            {column.renderCell ? column.renderCell(row) : value}
+                          <StyledTableCell key={column.field} align={column.align || 'left'}>
+                            {column.renderCell ? column.renderCell(row) : row[column.field]}
                           </StyledTableCell>
                         );
                       })}
-                      <StyledTableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          {actions.length > 0 ? (
-                            <>
-                              <IconButton
-                                aria-label="more"
-                                aria-controls="row-menu"
-                                aria-haspopup="true"
-                                onClick={(e) => handleActionMenuOpen(e, row)}
-                              >
-                                <MoreVertIcon />
-                              </IconButton>
-                              <Menu
-                                id="row-menu"
-                                anchorEl={anchorEl}
-                                keepMounted
-                                open={Boolean(anchorEl) && actionMenuRow?.id === row.id}
-                                onClose={handleActionMenuClose}
-                              >
-                                {actions.map((action) => (
-                                  <MenuItem 
-                                    key={action.name} 
-                                    onClick={() => {
-                                      action.handler(actionMenuRow);
-                                      handleActionMenuClose();
-                                    }}
-                                    disabled={action.disabled && action.disabled(actionMenuRow)}
-                                  >
-                                    <ListItemIcon>
-                                      {action.icon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={action.name} />
-                                  </MenuItem>
-                                ))}
-                                <Divider />
-                                <MenuItem 
-                                  onClick={() => {
-                                    onEdit(actionMenuRow);
-                                    handleActionMenuClose();
-                                  }}
-                                >
-                                  <ListItemIcon>
-                                    <EditIcon fontSize="small" />
-                                  </ListItemIcon>
-                                  <ListItemText primary="Editar" />
-                                </MenuItem>
-                                <MenuItem 
-                                  onClick={() => {
-                                    onDelete(actionMenuRow);
-                                    handleActionMenuClose();
-                                  }}
-                                >
-                                  <ListItemIcon>
-                                    <DeleteIcon fontSize="small" color="error" />
-                                  </ListItemIcon>
-                                  <ListItemText primary="Excluir" />
-                                </MenuItem>
-                              </Menu>
-                            </>
-                          ) : (
-                            <>
-                              <Tooltip title="Editar">
-                                <IconButton
-                                  aria-label="editar"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(row);
-                                  }}
-                                  color="primary"
-                                  size="small"
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Excluir">
-                                <IconButton
-                                  aria-label="excluir"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(row);
-                                  }}
-                                  color="error"
-                                  size="small"
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </>
-                          )}
-                        </Box>
-                      </StyledTableCell>
                     </StyledTableRow>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
@@ -488,10 +483,34 @@ const DataTable = ({
           page={page - 1}
           onPageChange={(e, newPage) => onPageChange(newPage + 1)}
           onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-          labelRowsPerPage="Itens por página:"
+          labelRowsPerPage={isMobile ? "Linhas:" : "Linhas por página:"}
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
         />
       </CardContent>
+      
+      {/* Menu de ações */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleActionMenuClose}
+      >
+        {actions.map((action) => (
+          <MenuItem 
+            key={action.name} 
+            onClick={() => {
+              action.handler(actionMenuRow);
+              handleActionMenuClose();
+            }}
+          >
+            {action.icon && (
+              <ListItemIcon>
+                {action.icon}
+              </ListItemIcon>
+            )}
+            <ListItemText primary={action.name} />
+          </MenuItem>
+        ))}
+      </Menu>
     </Card>
   );
 };

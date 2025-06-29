@@ -8,7 +8,6 @@ import {
   Alert,
   Chip,
   Autocomplete,
-  Grid,
   FormHelperText,
   Avatar,
   IconButton,
@@ -16,6 +15,7 @@ import {
   Card,
   CardContent
 } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2';
 import { 
   Add as AddIcon,
   Email as EmailIcon,
@@ -415,6 +415,87 @@ const Candidates = () => {
     { name: 'email', label: 'E-mail', type: 'text' }
   ];
 
+  // Adicionar função para renderizar o formulário
+  const renderCandidateForm = () => (
+    <Grid container spacing={2}>
+      <Grid xs={12}>
+        <TextField
+          label="Nome Completo"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          fullWidth
+          required
+          error={!!formErrors.name}
+          helperText={formErrors.name}
+        />
+      </Grid>
+      <Grid xs={12} sm={6}>
+        <TextField
+          label="E-mail"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          fullWidth
+          required
+          error={!!formErrors.email}
+          helperText={formErrors.email}
+        />
+      </Grid>
+      <Grid xs={12} sm={6}>
+        <TextField
+          label="Telefone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          fullWidth
+        />
+      </Grid>
+      <Grid xs={12}>
+        <TextField
+          label="Resumo / Currículo"
+          name="resume"
+          value={formData.resume}
+          onChange={handleChange}
+          fullWidth
+          multiline
+          rows={4}
+        />
+      </Grid>
+      <Grid xs={12}>
+        <Autocomplete
+          multiple
+          id="jobs"
+          options={jobs}
+          getOptionLabel={(option) => option.title}
+          value={formData.jobs}
+          onChange={handleJobsChange}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Vagas de Interesse"
+              placeholder="Selecione as vagas"
+              fullWidth
+            />
+          )}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                key={option.id}
+                label={option.title}
+                {...getTagProps({ index })}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            ))
+          }
+        />
+      </Grid>
+    </Grid>
+  );
+
   return (
     <Layout>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -461,99 +542,7 @@ const Candidates = () => {
         loading={loading}
         submitText={currentCandidate ? 'Atualizar' : 'Criar'}
       >
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <TextField
-              name="name"
-              label="Nome Completo"
-              fullWidth
-              value={formData.name}
-              onChange={handleChange}
-              error={!!formErrors.name}
-              helperText={formErrors.name}
-              required
-              variant="outlined"
-              margin="normal"
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="email"
-              label="E-mail"
-              fullWidth
-              value={formData.email}
-              onChange={handleChange}
-              error={!!formErrors.email}
-              helperText={formErrors.email}
-              required
-              variant="outlined"
-              margin="normal"
-              type="email"
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="phone"
-              label="Telefone"
-              fullWidth
-              value={formData.phone}
-              onChange={handleChange}
-              variant="outlined"
-              margin="normal"
-              placeholder="(00) 00000-0000"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              name="resume"
-              label="Resumo / Currículo"
-              fullWidth
-              multiline
-              rows={4}
-              value={formData.resume}
-              onChange={handleChange}
-              variant="outlined"
-              margin="normal"
-              placeholder="Descreva brevemente a experiência e habilidades do candidato"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Autocomplete
-              multiple
-              id="jobs"
-              options={jobs}
-              value={formData.jobs}
-              onChange={handleJobsChange}
-              getOptionLabel={(option) => option.title}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Vagas de Interesse"
-                  placeholder="Selecione as vagas"
-                  margin="normal"
-                />
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={option.id}
-                    label={option.title}
-                    {...getTagProps({ index })}
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                  />
-                ))
-              }
-            />
-            <FormHelperText>Selecione as vagas para as quais o candidato está se inscrevendo</FormHelperText>
-          </Grid>
-        </Grid>
+        {renderCandidateForm()}
       </FormModal>
 
       {/* Modal de Gerenciamento de Vagas do Candidato */}

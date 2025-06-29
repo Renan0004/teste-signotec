@@ -22,7 +22,8 @@ import {
   alpha,
   Tooltip,
   Badge,
-  ListSubheader
+  ListSubheader,
+  useMediaQuery
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -87,6 +88,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -104,6 +106,13 @@ const Layout = ({ children }) => {
     await logout();
     handleClose();
     navigate('/login');
+  };
+
+  // Fechar o drawer ao clicar em um item de menu no modo mobile
+  const handleMenuItemClick = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
   };
 
   // Menu de navegação
@@ -180,24 +189,37 @@ const Layout = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'medium' }}>
-            Sistema de Gerenciamento de Vagas
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              flexGrow: 1, 
+              fontWeight: 'medium',
+              fontSize: { xs: '1rem', sm: '1.25rem' } // Texto menor em dispositivos móveis
+            }}
+          >
+            {isMobile ? 'SignoTech' : 'Sistema de Gerenciamento de Vagas'}
           </Typography>
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title="Notificações">
-                <IconButton color="inherit" size="large">
-                  <Badge badgeContent={0} color="error">
-                    <NotificationsIcon />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Configurações">
-                <IconButton color="inherit" size="large">
-                  <SettingsIcon />
-                </IconButton>
-              </Tooltip>
-              <Box sx={{ ml: 2 }}>
+              {!isMobile && (
+                <>
+                  <Tooltip title="Notificações">
+                    <IconButton color="inherit" size="large">
+                      <Badge badgeContent={0} color="error">
+                        <NotificationsIcon />
+                      </Badge>
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Configurações">
+                    <IconButton color="inherit" size="large">
+                      <SettingsIcon />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+              <Box sx={{ ml: isMobile ? 0 : 2 }}>
                 <Tooltip title="Perfil do usuário">
                   <IconButton
                     size="large"
@@ -210,8 +232,8 @@ const Layout = ({ children }) => {
                     <Avatar 
                       sx={{ 
                         bgcolor: theme.palette.primary.main,
-                        width: 40,
-                        height: 40
+                        width: isMobile ? 32 : 40,
+                        height: isMobile ? 32 : 40
                       }}
                     >
                       {user?.name?.charAt(0) || <AccountCircleIcon />}
@@ -250,7 +272,7 @@ const Layout = ({ children }) => {
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
-                      <ExitToAppIcon fontSize="small" color="error" />
+                      <ExitToAppIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText primary="Sair" />
                   </MenuItem>
@@ -258,14 +280,27 @@ const Layout = ({ children }) => {
               </Box>
             </Box>
           ) : (
-            <Button 
-              color="primary" 
-              variant="contained"
-              component={Link} 
-              to="/login"
-            >
-              Login
-            </Button>
+            <Box>
+              <Button 
+                component={Link} 
+                to="/login" 
+                color="primary" 
+                variant={isMobile ? "text" : "outlined"}
+                size={isMobile ? "small" : "medium"}
+              >
+                Entrar
+              </Button>
+              <Button 
+                component={Link} 
+                to="/register" 
+                color="primary" 
+                variant="contained" 
+                sx={{ ml: 1 }}
+                size={isMobile ? "small" : "medium"}
+              >
+                Registrar
+              </Button>
+            </Box>
           )}
         </Toolbar>
       </AppBar>
@@ -273,19 +308,22 @@ const Layout = ({ children }) => {
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
-        <Drawer
+        {/* Drawer para dispositivos móveis */}
+        <StyledDrawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true,
+            keepMounted: true, // Melhor desempenho em dispositivos móveis
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
           }}
         >
           {drawer}
-        </Drawer>
+        </StyledDrawer>
+        
+        {/* Drawer permanente para desktop */}
         <StyledDrawer
           variant="permanent"
           sx={{
@@ -298,15 +336,14 @@ const Layout = ({ children }) => {
       </Box>
       <Box
         component="main"
-        sx={{ 
-          flexGrow: 1, 
-          p: 3, 
+        sx={{
+          flexGrow: 1,
+          p: { xs: 2, sm: 3 }, // Padding menor em dispositivos móveis
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          bgcolor: '#f5f5f5',
-          minHeight: '100vh'
+          mt: '64px', // Altura da AppBar
+          overflowX: 'hidden' // Evitar scroll horizontal
         }}
       >
-        <Toolbar />
         {children}
       </Box>
     </Box>

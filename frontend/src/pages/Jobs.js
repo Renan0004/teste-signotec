@@ -13,12 +13,12 @@ import {
   FormControlLabel,
   Snackbar,
   Alert,
-  Grid,
   Card,
   CardContent,
   Chip,
   IconButton
 } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2';
 import { 
   Add as AddIcon,
   ToggleOn as ToggleOnIcon,
@@ -320,6 +320,79 @@ const Jobs = () => {
     }
   ];
 
+  const renderForm = () => (
+    <Grid container spacing={2}>
+      <Grid xs={12}>
+        <TextField
+          label="Título da Vaga"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          fullWidth
+          required
+          error={!!formErrors.title}
+          helperText={formErrors.title}
+        />
+      </Grid>
+      <Grid xs={12} sm={6}>
+        <FormControl fullWidth required error={!!formErrors.type}>
+          <InputLabel>Tipo de Contratação</InputLabel>
+          <Select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            label="Tipo de Contratação"
+          >
+            <MenuItem value="CLT">CLT</MenuItem>
+            <MenuItem value="PJ">PJ</MenuItem>
+            <MenuItem value="Freelancer">Freelancer</MenuItem>
+            <MenuItem value="Estágio">Estágio</MenuItem>
+            <MenuItem value="Temporário">Temporário</MenuItem>
+          </Select>
+          {formErrors.type && <FormHelperText>{formErrors.type}</FormHelperText>}
+        </FormControl>
+      </Grid>
+      <Grid xs={12} sm={6}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.active}
+              onChange={handleChange}
+              name="active"
+              color="primary"
+            />
+          }
+          label="Vaga Ativa"
+        />
+      </Grid>
+      <Grid xs={12}>
+        <TextField
+          label="Descrição"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          fullWidth
+          required
+          multiline
+          rows={4}
+          error={!!formErrors.description}
+          helperText={formErrors.description}
+        />
+      </Grid>
+      <Grid xs={12}>
+        <TextField
+          label="Requisitos"
+          name="requirements"
+          value={formData.requirements}
+          onChange={handleChange}
+          fullWidth
+          multiline
+          rows={3}
+        />
+      </Grid>
+    </Grid>
+  );
+
   return (
     <Layout>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -365,87 +438,7 @@ const Jobs = () => {
         loading={loading}
         submitText={currentJob ? 'Atualizar' : 'Criar'}
       >
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <TextField
-              name="title"
-              label="Título da Vaga"
-              fullWidth
-              value={formData.title}
-              onChange={handleChange}
-              error={!!formErrors.title}
-              helperText={formErrors.title}
-              required
-              variant="outlined"
-              margin="normal"
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={!!formErrors.type} variant="outlined" margin="normal">
-              <InputLabel id="type-label">Tipo de Vaga</InputLabel>
-              <Select
-                labelId="type-label"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                label="Tipo de Vaga"
-                required
-              >
-                <MenuItem value="CLT">CLT</MenuItem>
-                <MenuItem value="PJ">Pessoa Jurídica</MenuItem>
-                <MenuItem value="FREELANCER">Freelancer</MenuItem>
-              </Select>
-              {formErrors.type && <FormHelperText>{formErrors.type}</FormHelperText>}
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.active}
-                  onChange={handleChange}
-                  name="active"
-                  color="primary"
-                />
-              }
-              label={formData.active ? "Vaga Ativa" : "Vaga Pausada"}
-              sx={{ mt: 2 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              name="description"
-              label="Descrição"
-              fullWidth
-              multiline
-              rows={4}
-              value={formData.description}
-              onChange={handleChange}
-              error={!!formErrors.description}
-              helperText={formErrors.description}
-              required
-              variant="outlined"
-              margin="normal"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              name="requirements"
-              label="Requisitos"
-              fullWidth
-              multiline
-              rows={4}
-              value={formData.requirements}
-              onChange={handleChange}
-              variant="outlined"
-              margin="normal"
-            />
-          </Grid>
-        </Grid>
+        {renderForm()}
       </FormModal>
 
       <Snackbar
