@@ -28,6 +28,7 @@ const Login = ({ onLogin, onRegisterClick }) => {
     e.preventDefault();
     setError('');
 
+    // Fazer login
     try {
       const response = await fetch('http://localhost:8000/api/login', {
         method: 'POST',
@@ -51,6 +52,7 @@ const Login = ({ onLogin, onRegisterClick }) => {
     }
   };
 
+  // Renderizar o componente
   return (
     <Box
       sx={{

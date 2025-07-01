@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   TextField,
   Button,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Box,
-  Typography,
-  Paper
+  Alert
 } from '@mui/material';
 
-const JobForm = ({ jobToEdit, onSave, onCancel }) => {
+const JobForm = ({ onSubmit, initialData = null, onClose }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    company: '',
-    location: '',
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    company: initialData?.company || '',
+    location: initialData?.location || '',
+    contract_type: initialData?.contract_type || 'CLT',
+    is_active: initialData?.is_active ?? true
   });
 
-  useEffect(() => {
-    if (jobToEdit) {
-      setFormData(jobToEdit);
-    }
-  }, [jobToEdit]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,100 +34,126 @@ const JobForm = ({ jobToEdit, onSave, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const url = jobToEdit
-      ? `http://localhost:8000/api/jobs/${jobToEdit.id}`
-      : 'http://localhost:8000/api/jobs';
-    
-    const method = jobToEdit ? 'PUT' : 'POST';
+    setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onSave();
-        setFormData({
-          title: '',
-          description: '',
-          company: '',
-          location: '',
-        });
-      }
+      await onSubmit(formData);
+      onClose();
     } catch (error) {
-      console.error('Erro ao salvar vaga:', error);
+      setError('Erro ao salvar a vaga. Por favor, tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ mt: 4 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          {jobToEdit ? 'Editar Vaga' : 'Nova Vaga'}
-        </Typography>
-        <form onSubmit={handleSubmit}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
           <TextField
-            fullWidth
-            label="Título"
             name="title"
+            label="Título da Vaga"
             value={formData.title}
             onChange={handleChange}
-            margin="normal"
+            fullWidth
             required
           />
+        </Grid>
+
+        <Grid item xs={12}>
           <TextField
-            fullWidth
-            label="Descrição"
             name="description"
+            label="Descrição"
             value={formData.description}
             onChange={handleChange}
-            margin="normal"
+            fullWidth
+            required
             multiline
             rows={4}
-            required
           />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
           <TextField
-            fullWidth
-            label="Empresa"
             name="company"
+            label="Empresa"
             value={formData.company}
             onChange={handleChange}
-            margin="normal"
+            fullWidth
             required
           />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
           <TextField
-            fullWidth
-            label="Localização"
             name="location"
+            label="Localização"
             value={formData.location}
             onChange={handleChange}
-            margin="normal"
+            fullWidth
             required
           />
-          <Box sx={{ mt: 2 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ mr: 2 }}
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel>Tipo de Contrato</InputLabel>
+            <Select
+              name="contract_type"
+              value={formData.contract_type}
+              onChange={handleChange}
+              label="Tipo de Contrato"
+              required
             >
-              {jobToEdit ? 'Atualizar' : 'Criar'}
-            </Button>
+              <MenuItem value="CLT">CLT</MenuItem>
+              <MenuItem value="PJ">PJ</MenuItem>
+              <MenuItem value="FREELANCER">Freelancer</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              name="is_active"
+              value={formData.is_active}
+              onChange={handleChange}
+              label="Status"
+              required
+            >
+              <MenuItem value={true}>Ativa</MenuItem>
+              <MenuItem value={false}>Inativa</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
-              variant="outlined"
-              onClick={onCancel}
+              type="button"
+              onClick={onClose}
+              disabled={loading}
             >
               Cancelar
             </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+            >
+              {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Criar'}
+            </Button>
           </Box>
-        </form>
-      </Paper>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

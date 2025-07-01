@@ -31,11 +31,19 @@ const Register = ({ onRegister, onLoginClick }) => {
     setError('');
 
     try {
+      // Primeiro, obter o CSRF token
+      await fetch('http://localhost:8000/sanctum/csrf-cookie', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
       const response = await fetch('http://localhost:8000/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 

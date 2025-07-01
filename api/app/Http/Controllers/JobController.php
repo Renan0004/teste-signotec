@@ -9,9 +9,9 @@ use Illuminate\Validation\Rule;
 
 class JobController extends Controller
 {
+    // Mostrar todas as vagas
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 20);
         $query = Job::query();
 
         // Filtros
@@ -37,10 +37,11 @@ class JobController extends Controller
         $sortDirection = $request->input('sort_direction', 'desc');
         $query->orderBy($sortField, $sortDirection);
 
-        $jobs = $query->paginate($perPage);
+        $jobs = $query->get();
         return response()->json($jobs);
     }
 
+    // Criar uma nova vaga
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -56,11 +57,13 @@ class JobController extends Controller
         return response()->json($job, 201);
     }
 
+    // Mostrar uma vaga específica
     public function show(Job $job): JsonResponse
     {
         return response()->json($job);
     }
 
+    // Atualizar uma vaga existente
     public function update(Request $request, Job $job): JsonResponse
     {
         $validated = $request->validate([
@@ -76,6 +79,7 @@ class JobController extends Controller
         return response()->json($job);
     }
 
+    // Deletar uma vaga
     public function destroy(Request $request, $ids = null): JsonResponse
     {
         // Deleção em massa
@@ -89,5 +93,12 @@ class JobController extends Controller
         $job = Job::findOrFail($ids);
         $job->delete();
         return response()->json(['message' => 'Vaga deletada com sucesso']);
+    }
+
+    // Buscar candidatos aplicados para uma vaga
+    public function getCandidatesForJob(Job $job): JsonResponse
+    {
+        $candidates = $job->candidates()->get();
+        return response()->json($candidates);
     }
 } 
