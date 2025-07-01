@@ -14,8 +14,17 @@ class Candidate extends Model
         'name',
         'email',
         'phone',
-        'resume'
+        'curriculum_path'
     ];
+
+    protected $appends = ['curriculum_url'];
+
+    public function getCurriculumUrlAttribute()
+    {
+        return $this->curriculum_path
+            ? asset('storage/' . $this->curriculum_path)
+            : null;
+    }
 
     public function jobs(): BelongsToMany
     {

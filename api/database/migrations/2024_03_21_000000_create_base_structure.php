@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone');
+            $table->string('curriculum_path')->nullable();
             $table->text('resume');
             $table->timestamps();
         });

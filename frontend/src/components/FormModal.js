@@ -3,11 +3,10 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
   IconButton,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Box
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -22,23 +21,47 @@ const FormModal = ({ open, onClose, title, children, maxWidth = 'sm' }) => {
       fullScreen={fullScreen}
       maxWidth={maxWidth}
       fullWidth
+      PaperProps={{
+        sx: {
+          minHeight: '50vh',
+          maxHeight: '90vh',
+        },
+      }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {title}
+      <DialogTitle 
+        sx={{ 
+          m: 0, 
+          p: 2, 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          bgcolor: 'primary.main',
+          color: 'white'
+        }}
+      >
+        <Box component="span" sx={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+          {title}
+        </Box>
         <IconButton
           aria-label="close"
           onClick={onClose}
           sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'primary.dark',
+            },
           }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent 
+        dividers
+        sx={{
+          p: 3,
+          overflow: 'auto'
+        }}
+      >
         {children}
       </DialogContent>
     </Dialog>

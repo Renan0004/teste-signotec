@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class CandidateController extends Controller
 {
@@ -32,24 +33,26 @@ class CandidateController extends Controller
     // Criar um novo candidato
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:candidates',
+            'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
-            'resume' => 'required|string|max:5000',
-            'jobs' => 'array'
+            'curriculum' => 'required|file|mimes:pdf,doc,docx|max:10240', // máximo 10MB
         ]);
 
-        $jobs = $validated['jobs'] ?? [];
-        unset($validated['jobs']);
-
-        $candidate = Candidate::create($validated);
-        
-        if (!empty($jobs)) {
-            $candidate->jobs()->attach(collect($jobs)->pluck('id'));
+        $curriculumPath = null;
+        if ($request->hasFile('curriculum')) {
+            $curriculumPath = $request->file('curriculum')->store('curriculos', 'public');
         }
 
-        return response()->json($candidate->load('jobs'), 201);
+        $candidate = Candidate::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'curriculum_path' => $curriculumPath,
+        ]);
+
+        return response()->json($candidate, 201);
     }
 
     // Mostrar um candidato específico
@@ -61,31 +64,39 @@ class CandidateController extends Controller
     // Atualizar um candidato existente
     public function update(Request $request, Candidate $candidate): JsonResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:candidates,email,' . $candidate->id,
+            'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
-            'resume' => 'required|string|max:5000',
-            'jobs' => 'array'
+            'curriculum' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
-        $jobs = $validated['jobs'] ?? [];
-        unset($validated['jobs']);
-
-        $candidate->update($validated);
-        
-        if (isset($jobs)) {
-            $candidate->jobs()->sync(collect($jobs)->pluck('id'));
+        if ($request->hasFile('curriculum')) {
+            // Remove o arquivo antigo se existir
+            if ($candidate->curriculum_path) {
+                Storage::disk('public')->delete($candidate->curriculum_path);
+            }
+            $curriculumPath = $request->file('curriculum')->store('curriculos', 'public');
+            $candidate->curriculum_path = $curriculumPath;
         }
 
-        return response()->json($candidate->load('jobs'));
+        $candidate->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return response()->json($candidate);
     }
 
     // Deletar um candidato
     public function destroy(Candidate $candidate): JsonResponse
     {
+        if ($candidate->curriculum_path) {
+            Storage::disk('public')->delete($candidate->curriculum_path);
+        }
         $candidate->delete();
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 
     // Aplicar para uma vaga

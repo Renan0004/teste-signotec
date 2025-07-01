@@ -125,8 +125,8 @@ function App() {
       <Container maxWidth="lg">
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs value={tab} onChange={handleTabChange}>
-            <Tab label="Vagas" />
-            <Tab label="Candidatos" />
+            <Tab label="VAGAS" />
+            <Tab label="CANDIDATOS" />
           </Tabs>
         </Box>
 

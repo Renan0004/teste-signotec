@@ -18,15 +18,30 @@ import {
   Paper,
   Avatar,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Input,
+  FormHelperText,
+  LinearProgress,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
   Description as DescriptionIcon,
-  Work as WorkIcon
+  Work as WorkIcon,
+  CloudUpload as CloudUploadIcon,
+  LinkedIn as LinkedInIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  RemoveCircle as RemoveCircleIcon
 } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
 
 // Componente para criar e editar candidatos
 const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
@@ -35,16 +50,22 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
     name: initialData?.name || '',
     email: initialData?.email || '',
     phone: initialData?.phone || '',
-    resume: initialData?.resume || '',
-    jobs: initialData?.jobs || []
+    linkedin: initialData?.linkedin || '',
+    curriculum: initialData?.curriculum || null,
+    selectedJobs: initialData?.jobs || [],
+    experiences: initialData?.experiences || [
+      { company: '', position: '', period: '', description: '' }
+    ]
   });
 
   const [availableJobs, setAvailableJobs] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const steps = ['Informações Pessoais', 'Currículo', 'Vagas de Interesse'];
+  const steps = ['Informações Pessoais', 'Experiência Profissional', 'Currículo e Vagas'];
 
   useEffect(() => {
     fetchJobs();
@@ -52,16 +73,10 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/jobs', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Erro ao buscar vagas');
-      }
+      const response = await fetch('http://localhost:8000/api/jobs');
+      if (!response.ok) throw new Error('Erro ao buscar vagas');
       const data = await response.json();
-      setAvailableJobs(data);
+      setAvailableJobs(data.data || []);
     } catch (error) {
       console.error('Erro ao buscar vagas:', error);
       setError('Erro ao carregar as vagas disponíveis');
@@ -76,10 +91,28 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
       if (!formData.email) errors.email = 'Email é obrigatório';
       else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email inválido';
       if (!formData.phone) errors.phone = 'Telefone é obrigatório';
-      else if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(formData.phone)) errors.phone = 'Formato: (99) 99999-9999';
+      else if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(formData.phone)) errors.phone = 'Formato inválido';
+      if (formData.linkedin && !/^https?:\/\/[a-zA-Z0-9-]+\.linkedin\.com\/.*$/.test(formData.linkedin)) {
+        errors.linkedin = 'URL do LinkedIn inválida';
+      }
     } else if (activeStep === 1) {
-      if (!formData.resume) errors.resume = 'Currículo é obrigatório';
-      else if (formData.resume.length < 50) errors.resume = 'Mínimo de 50 caracteres';
+      const experienceErrors = formData.experiences.map(exp => {
+        const expError = {};
+        if (!exp.company) expError.company = 'Empresa é obrigatória';
+        if (!exp.position) expError.position = 'Cargo é obrigatório';
+        if (!exp.period) expError.period = 'Período é obrigatório';
+        return expError;
+      });
+      if (experienceErrors.some(err => Object.keys(err).length > 0)) {
+        errors.experiences = experienceErrors;
+      }
+    } else if (activeStep === 2) {
+      if (!formData.curriculum && !initialData?.curriculum_url) {
+        errors.curriculum = 'Currículo é obrigatório';
+      }
+      if (!formData.selectedJobs || formData.selectedJobs.length === 0) {
+        errors.selectedJobs = 'Selecione pelo menos uma vaga';
+      }
     }
 
     setValidationErrors(errors);
@@ -98,12 +131,29 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'phone') {
+      let phoneNumber = value.replace(/\D/g, '');
+      phoneNumber = phoneNumber.slice(0, 11);
+      
+      if (phoneNumber.length >= 2) {
+        phoneNumber = `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+      }
+      if (phoneNumber.length >= 10) {
+        phoneNumber = `${phoneNumber.slice(0, 10)}-${phoneNumber.slice(10)}`;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: phoneNumber
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
 
-    // Limpa o erro do campo quando o usuário começa a digitar
     if (validationErrors[name]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -112,40 +162,146 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
     }
   };
 
-  const formatPhone = (value) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+  const handleExperienceChange = (index, field, value) => {
+    const newExperiences = [...formData.experiences];
+    newExperiences[index] = {
+      ...newExperiences[index],
+      [field]: value
+    };
+    setFormData(prev => ({
+      ...prev,
+      experiences: newExperiences
+    }));
+
+    if (validationErrors.experiences?.[index]?.[field]) {
+      const newErrors = { ...validationErrors };
+      if (newErrors.experiences) {
+        newErrors.experiences[index] = {
+          ...newErrors.experiences[index],
+          [field]: undefined
+        };
+      }
+      setValidationErrors(newErrors);
     }
-    return value;
   };
 
-  const handlePhoneChange = (e) => {
-    const formattedPhone = formatPhone(e.target.value);
-    handleChange({
-      target: {
-        name: 'phone',
-        value: formattedPhone
+  const addExperience = () => {
+    setFormData(prev => ({
+      ...prev,
+      experiences: [
+        ...prev.experiences,
+        { company: '', position: '', period: '', description: '' }
+      ]
+    }));
+  };
+
+  const removeExperience = (index) => {
+    if (formData.experiences.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        experiences: prev.experiences.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setValidationErrors(prev => ({
+          ...prev,
+          curriculum: 'O arquivo deve ter no máximo 5MB'
+        }));
+        return;
       }
-    });
+
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setValidationErrors(prev => ({
+          ...prev,
+          curriculum: 'Apenas arquivos PDF ou Word são permitidos'
+        }));
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        curriculum: file
+      }));
+
+      // Criar preview URL para PDF
+      if (file.type === 'application/pdf') {
+        setPreviewUrl(URL.createObjectURL(file));
+      } else {
+        setPreviewUrl(null);
+      }
+
+      setValidationErrors(prev => ({
+        ...prev,
+        curriculum: undefined
+      }));
+
+      // Simular progresso de upload
+      setUploadProgress(0);
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep()) return;
-
+    
     setLoading(true);
     setError(null);
 
     try {
-      await onSubmit(formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('linkedin', formData.linkedin);
+      
+      if (formData.curriculum) {
+        formDataToSend.append('curriculum', formData.curriculum);
+      }
+
+      formDataToSend.append('experiences', JSON.stringify(formData.experiences));
+
+      if (formData.selectedJobs.length > 0) {
+        formData.selectedJobs.forEach(jobId => {
+          formDataToSend.append('jobs[]', jobId);
+        });
+      }
+
+      await onSubmit(formDataToSend);
       onClose();
     } catch (error) {
-      setError('Erro ao salvar o candidato. Por favor, tente novamente.');
+      console.error('Erro:', error);
+      setError('Erro ao salvar candidato. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
   };
+
+  const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+  });
 
   const renderStepContent = (step) => {
     switch (step) {
@@ -196,7 +352,7 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
                 name="phone"
                 label="Telefone"
                 value={formData.phone}
-                onChange={handlePhoneChange}
+                onChange={handleChange}
                 fullWidth
                 required
                 error={!!validationErrors.phone}
@@ -211,27 +367,19 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
                 }}
               />
             </Grid>
-          </Grid>
-        );
-      case 1:
-        return (
-          <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
-                name="resume"
-                label="Currículo/Resumo Profissional"
-                value={formData.resume}
+                name="linkedin"
+                label="LinkedIn"
+                value={formData.linkedin}
                 onChange={handleChange}
                 fullWidth
-                required
-                multiline
-                rows={8}
-                error={!!validationErrors.resume}
-                helperText={validationErrors.resume}
+                error={!!validationErrors.linkedin}
+                helperText={validationErrors.linkedin || 'URL do seu perfil no LinkedIn (opcional)'}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <DescriptionIcon color="primary" />
+                      <LinkedInIcon color="primary" />
                     </InputAdornment>
                   ),
                 }}
@@ -239,41 +387,187 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
             </Grid>
           </Grid>
         );
+
+      case 1:
+        return (
+          <Box>
+            <List>
+              {formData.experiences.map((experience, index) => (
+                <Box key={index}>
+                  <ListItem>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle1" gutterBottom>
+                          Experiência {index + 1}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Empresa"
+                          value={experience.company}
+                          onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                          error={!!validationErrors.experiences?.[index]?.company}
+                          helperText={validationErrors.experiences?.[index]?.company}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Cargo"
+                          value={experience.position}
+                          onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
+                          error={!!validationErrors.experiences?.[index]?.position}
+                          helperText={validationErrors.experiences?.[index]?.position}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Período"
+                          value={experience.period}
+                          onChange={(e) => handleExperienceChange(index, 'period', e.target.value)}
+                          error={!!validationErrors.experiences?.[index]?.period}
+                          helperText={validationErrors.experiences?.[index]?.period || 'Ex: Jan/2020 - Atual'}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Descrição das Atividades"
+                          value={experience.description}
+                          onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                          multiline
+                          rows={3}
+                        />
+                      </Grid>
+                    </Grid>
+                    {formData.experiences.length > 1 && (
+                      <IconButton
+                        edge="end"
+                        onClick={() => removeExperience(index)}
+                        sx={{ position: 'absolute', right: 0, top: 0 }}
+                      >
+                        <RemoveCircleIcon color="error" />
+                      </IconButton>
+                    )}
+                  </ListItem>
+                  {index < formData.experiences.length - 1 && <Divider sx={{ my: 2 }} />}
+                </Box>
+              ))}
+            </List>
+            <Button
+              startIcon={<AddIcon />}
+              onClick={addExperience}
+              sx={{ mt: 2 }}
+            >
+              Adicionar Experiência
+            </Button>
+          </Box>
+        );
+
       case 2:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id="jobs-label">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <WorkIcon color="primary" />
-                    Vagas de Interesse
+              <Box
+                sx={{
+                  border: '2px dashed',
+                  borderColor: validationErrors.curriculum ? 'error.main' : 'primary.main',
+                  borderRadius: 1,
+                  p: 3,
+                  textAlign: 'center',
+                  bgcolor: 'background.paper',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    cursor: 'pointer'
+                  }}
+                />
+                <CloudUploadIcon color="primary" sx={{ fontSize: 48, mb: 1 }} />
+                <Typography variant="h6" gutterBottom>
+                  {formData.curriculum ? formData.curriculum.name : 'Arraste seu currículo ou clique para selecionar'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  PDF ou Word (máx. 5MB)
+                </Typography>
+                {validationErrors.curriculum && (
+                  <Typography color="error" variant="caption" display="block">
+                    {validationErrors.curriculum}
+                  </Typography>
+                )}
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <Box sx={{ width: '100%', mt: 2 }}>
+                    <LinearProgress variant="determinate" value={uploadProgress} />
                   </Box>
-                </InputLabel>
+                )}
+                {previewUrl && (
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      href={previewUrl}
+                      target="_blank"
+                      startIcon={<DescriptionIcon />}
+                    >
+                      Visualizar PDF
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!validationErrors.selectedJobs}>
+                <InputLabel>Vagas de Interesse</InputLabel>
                 <Select
-                  labelId="jobs-label"
                   multiple
-                  name="jobs"
-                  value={formData.jobs}
-                  onChange={handleChange}
+                  value={formData.selectedJobs}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      selectedJobs: e.target.value
+                    }));
+                    setValidationErrors(prev => ({
+                      ...prev,
+                      selectedJobs: undefined
+                    }));
+                  }}
                   input={<OutlinedInput label="Vagas de Interesse" />}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((job) => (
-                        <Chip
-                          key={job.id}
-                          label={job.title}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
+                      {selected.map((jobId) => {
+                        const job = availableJobs.find(j => j.id === jobId);
+                        return job ? (
+                          <Chip
+                            key={jobId}
+                            label={job.title}
+                            size="small"
+                            icon={<WorkIcon />}
+                          />
+                        ) : null;
+                      })}
                     </Box>
                   )}
                 >
                   {availableJobs.map((job) => (
-                    <MenuItem key={job.id} value={job}>
+                    <MenuItem key={job.id} value={job.id}>
                       <Box>
-                        <Typography variant="subtitle1">{job.title}</Typography>
+                        <Typography variant="subtitle2">{job.title}</Typography>
                         <Typography variant="caption" color="textSecondary">
                           {job.company} - {job.location}
                         </Typography>
@@ -281,6 +575,9 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {validationErrors.selectedJobs && (
+                  <FormHelperText>{validationErrors.selectedJobs}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
           </Grid>
@@ -291,13 +588,7 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
   };
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
+    <Box sx={{ width: '100%' }}>
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
         {steps.map((label) => (
           <Step key={label}>
@@ -306,42 +597,34 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
         ))}
       </Stepper>
 
-      <Paper elevation={0} sx={{ p: 3, backgroundColor: 'transparent' }}>
-        <form onSubmit={handleSubmit}>
-          {renderStepContent(activeStep)}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+      <form onSubmit={handleSubmit}>
+        {renderStepContent(activeStep)}
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Button
+            disabled={activeStep === 0}
+            onClick={handleBack}
+          >
+            Voltar
+          </Button>
+          <Box>
             <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
+              variant="contained"
+              color="primary"
+              onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+              disabled={loading}
             >
-              Voltar
+              {activeStep === steps.length - 1 ? 'Salvar' : 'Próximo'}
             </Button>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button onClick={onClose}>
-                Cancelar
-              </Button>
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  variant="contained"
-                  type="submit"
-                  disabled={loading}
-                  startIcon={loading && <CircularProgress size={20} />}
-                >
-                  {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Finalizar'}
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                >
-                  Próximo
-                </Button>
-              )}
-            </Box>
           </Box>
-        </form>
-      </Paper>
+        </Box>
+      </form>
     </Box>
   );
 };
