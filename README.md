@@ -1,132 +1,76 @@
-# Teste SignoTech - Sistema de Gerenciamento de Vagas e Candidatos
+# Sistema de Vagas
 
-Este projeto implementa um sistema de gerenciamento de vagas e candidatos, conforme solicitado no teste da SignoTech.
+Este é um sistema de gerenciamento de vagas e candidatos desenvolvido com Laravel (backend) e React (frontend).
 
-## Requisitos do Sistema
+## Requisitos
 
-- Docker e Docker Compose
 - PHP 8.1 ou superior
 - Composer
-- Node.js 16 ou superior
+- Node.js 14 ou superior
 - NPM ou Yarn
 
-## Configuração do Ambiente
+## Instalação
 
-### Usando Docker (Recomendado)
+### Backend (Laravel)
 
-1. Clone o repositório:
-   ```
-   git clone https://github.com/seu-usuario/teste-signotec.git
-   cd teste-signotec
-   ```
-
-2. Inicie os contêineres Docker:
-   ```
-   docker-compose up -d
-   ```
-
-3. Acesse o contêiner do backend para executar comandos:
-   ```
-   docker exec -it signotec-backend bash
-   ```
-
-4. Dentro do contêiner, execute as migrações e seeders:
-   ```
-   php artisan migrate --seed
-   ```
-
-5. Limpe o banco de dados para manter apenas as tabelas necessárias:
-   ```
-   php artisan db:clean
-   ```
-
-6. Acesse o frontend em: http://localhost:3000
-7. Acesse o backend em: http://localhost:8000
-8. Acesse o phpMyAdmin em: http://localhost:8080 (usuário: signotec, senha: secret)
-
-### Instalação Manual (Sem Docker)
-
-1. Configure o backend:
-   ```
-   cd backend
-   composer install
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-2. Configure o banco de dados no arquivo .env e execute as migrações:
-   ```
-   php artisan migrate --seed
-   php artisan db:clean
-   ```
-
-3. Inicie o servidor do backend:
-   ```
-   php artisan serve
-   ```
-
-4. Configure o frontend:
-   ```
-   cd ../frontend
-   npm install
-   ```
-
-5. Inicie o servidor do frontend:
-   ```
-   npm start
-   ```
-
-## Estrutura do Banco de Dados
-
-O banco de dados foi otimizado para manter apenas as tabelas necessárias para o teste:
-
-1. **users** - Para autenticação de usuários
-2. **personal_access_tokens** - Para autenticação via API
-3. **job_listings** - Para o CRUD de vagas
-4. **candidates** - Para o CRUD de candidatos
-5. **candidate_job** - Para relacionamento entre candidatos e vagas
-
-## Funcionalidades Implementadas
-
-- CRUD completo de vagas (criar, listar, editar, excluir)
-- CRUD completo de candidatos (criar, listar, editar, excluir)
-- Relacionamento muitos-para-muitos entre candidatos e vagas
-- Possibilidade de "pausar" uma vaga (desativar)
-- Filtros e ordenação em todos os CRUDs
-- Paginação de 20 itens por página
-- Validação de campos obrigatórios
-- API REST para todos os CRUDs
-- Autenticação de usuários
-- Deleção em massa de itens
-
-## Comandos Úteis
-
-### Limpar o Banco de Dados
-
-Para manter apenas as tabelas necessárias para o teste:
-
-```
-php artisan db:clean
+1. Entre na pasta do backend:
+```bash
+cd api
 ```
 
-### Recriar o Banco de Dados
-
-Para recriar o banco de dados do zero:
-
-```
-php artisan migrate:fresh --seed
-php artisan db:clean
+2. Instale as dependências:
+```bash
+composer install
 ```
 
-### Executar Testes
-
+3. Copie o arquivo .env.example para .env e configure o banco de dados SQLite:
+```bash
+cp .env.example .env
 ```
-php artisan test
+
+4. Gere a chave da aplicação:
+```bash
+php artisan key:generate
 ```
 
-## API Documentation
+5. Execute as migrations:
+```bash
+php artisan migrate
+```
 
-A documentação da API está disponível em:
+6. Inicie o servidor:
+```bash
+php artisan serve
+```
 
-- Swagger UI: http://localhost:8000/api/documentation
-- Arquivo Postman: `docs/SignoTech-API.postman_collection.json` 
+### Frontend (React)
+
+1. Entre na pasta do frontend:
+```bash
+cd frontend
+```
+
+2. Instale as dependências:
+```bash
+npm install
+```
+
+3. Inicie o servidor de desenvolvimento:
+```bash
+npm start
+```
+
+## Uso
+
+O sistema estará disponível em:
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+
+### Funcionalidades
+
+- CRUD de vagas (CLT, PJ ou Freelancer)
+- CRUD de candidatos
+- Inscrição de candidatos em vagas
+- Filtro e ordenação de listagens
+- Paginação de 20 itens por página 
