@@ -1,130 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  Alert
+    Box,
+    Button,
+    TextField,
+    Typography,
+    InputAdornment,
+    IconButton,
+    Link,
+    Alert
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
-const Login = ({ onLogin, onRegisterClick }) => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+const Login = () => {
+    const { login, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    useEffect(() => {
+        // Se já estiver autenticado, redireciona para o dashboard
+        if (isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsSubmitting(true);
 
-    // Fazer login
-    try {
-      const response = await fetch('http://localhost:8000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+        try {
+            await login(email, password);
+            // O redirecionamento será feito pelo AuthContext
+        } catch (error) {
+            console.error('Erro no login:', error);
+            setError(error.response?.data?.message || 'Erro ao fazer login. Por favor, tente novamente.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-      const data = await response.json();
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
+        setError(''); // Limpa o erro quando o usuário começa a digitar
+    };
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
-      }
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        setError(''); // Limpa o erro quando o usuário começa a digitar
+    };
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin(data);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
 
-  // Renderizar o componente
-  return (
-    <Box
-      sx={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: '#f5f5f5'
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          width: '100%',
-          maxWidth: 400,
-        }}
-      >
-        <Typography variant="h4" align="center" gutterBottom>
-          Login
-        </Typography>
+    return (
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
+                    Sistema de Gerenciamento de Vagas
+                </Typography>
+            </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            margin="normal"
-            required
-          />
-          <TextField
-            fullWidth
-            label="Senha"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            margin="normal"
-            required
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Entrar
-          </Button>
-        </form>
+            <TextField
+                fullWidth
+                label="E-mail"
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                margin="normal"
+                required
+                autoComplete="email"
+                autoFocus
+                error={!!error}
+                sx={{ mb: 2 }}
+            />
 
-        <Typography align="center">
-          Não tem uma conta?{' '}
-          <Link
-            component="button"
-            variant="body2"
-            onClick={onRegisterClick}
-          >
-            Registre-se
-          </Link>
-        </Typography>
-      </Paper>
-    </Box>
-  );
+            <TextField
+                fullWidth
+                label="Senha"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={handlePasswordChange}
+                margin="normal"
+                required
+                autoComplete="current-password"
+                error={!!error}
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <IconButton
+                                aria-label="toggle password visibility"
+                                onClick={handleClickShowPassword}
+                                edge="end"
+                            >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                }}
+                sx={{ mb: 3 }}
+            />
+
+            <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isSubmitting}
+                sx={{
+                    py: 1.5,
+                    mb: 2,
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    boxShadow: 'none',
+                    '&:hover': {
+                        boxShadow: 'none',
+                    },
+                }}
+            >
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
+            </Button>
+
+            <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                    Não tem uma conta?{' '}
+                    <Link
+                        component={RouterLink}
+                        to="/auth/register"
+                        color="primary"
+                        sx={{ fontWeight: 600, textDecoration: 'none' }}
+                    >
+                        Cadastre-se
+                    </Link>
+                </Typography>
+            </Box>
+        </Box>
+    );
 };
 
 export default Login; 

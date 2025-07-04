@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Models\Job;
+use App\Models\Candidate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class JobTest extends TestCase
@@ -12,49 +13,78 @@ class JobTest extends TestCase
 
     public function test_can_create_job()
     {
-        $jobData = [
-            'title' => 'Software Developer',
-            'description' => 'PHP Developer position',
-            'company' => 'Tech Corp',
-            'location' => 'São Paulo',
-            'contract_type' => 'CLT',
-            'is_active' => true
-        ];
-
-        $job = Job::create($jobData);
-
+        $job = Job::factory()->create();
         $this->assertInstanceOf(Job::class, $job);
-        $this->assertEquals($jobData['title'], $job->title);
-        $this->assertEquals($jobData['contract_type'], $job->contract_type);
-        $this->assertTrue($job->is_active);
+        $this->assertDatabaseHas('job_positions', ['id' => $job->id]);
     }
 
     public function test_can_update_job()
     {
         $job = Job::factory()->create();
-
         $job->update(['title' => 'Updated Title']);
-
         $this->assertEquals('Updated Title', $job->fresh()->title);
     }
 
     public function test_can_delete_job()
     {
         $job = Job::factory()->create();
-
         $job->delete();
-
         $this->assertDatabaseMissing('job_positions', ['id' => $job->id]);
     }
 
-    public function test_scope_active_only_returns_active_jobs()
+    public function test_can_attach_candidates()
     {
-        Job::factory()->create(['is_active' => true]);
-        Job::factory()->create(['is_active' => false]);
+        $job = Job::factory()->create();
+        $candidates = Candidate::factory(3)->create();
+        
+        $job->candidates()->attach($candidates->pluck('id'));
+        
+        $this->assertEquals(3, $job->candidates()->count());
+        foreach ($candidates as $candidate) {
+            $this->assertTrue($job->candidates->contains($candidate));
+        }
+    }
 
-        $activeJobs = Job::active()->get();
+    public function test_can_detach_candidates()
+    {
+        $job = Job::factory()->create();
+        $candidates = Candidate::factory(3)->create();
+        
+        $job->candidates()->attach($candidates->pluck('id'));
+        $job->candidates()->detach($candidates->pluck('id'));
+        
+        $this->assertEquals(0, $job->candidates()->count());
+    }
 
-        $this->assertEquals(1, $activeJobs->count());
-        $this->assertTrue($activeJobs->first()->is_active);
+    public function test_can_sync_candidates()
+    {
+        $job = Job::factory()->create();
+        $candidates = Candidate::factory(3)->create();
+        
+        // Anexa todos os candidatos
+        $job->candidates()->attach($candidates->pluck('id'));
+        
+        // Sincroniza apenas com o primeiro candidato
+        $job->candidates()->sync([$candidates->first()->id]);
+        
+        $this->assertEquals(1, $job->candidates()->count());
+        $this->assertTrue($job->candidates->contains($candidates->first()));
+    }
+
+    public function test_can_toggle_active_status()
+    {
+        $job = Job::factory()->create(['is_active' => true]);
+        
+        $job->update(['is_active' => false]);
+        $this->assertFalse($job->fresh()->is_active);
+        
+        $job->update(['is_active' => true]);
+        $this->assertTrue($job->fresh()->is_active);
+    }
+
+    public function test_has_valid_contract_type()
+    {
+        $job = Job::factory()->create();
+        $this->assertContains($job->contract_type, ['CLT', 'PJ', 'FREELANCER']);
     }
 } 

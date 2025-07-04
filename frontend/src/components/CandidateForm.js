@@ -27,7 +27,10 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Divider
+  Divider,
+  Stack,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -42,18 +45,22 @@ import {
   RemoveCircle as RemoveCircleIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import api from '../services/api';
+import { useSnackbar } from 'notistack';
 
 // Componente para criar e editar candidatos
-const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
+const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    email: initialData?.email || '',
-    phone: initialData?.phone || '',
-    linkedin: initialData?.linkedin || '',
-    curriculum: initialData?.curriculum || null,
-    selectedJobs: initialData?.jobs || [],
-    experiences: initialData?.experiences || [
+    name: candidate ? candidate.name : '',
+    email: candidate ? candidate.email : '',
+    phone: candidate ? candidate.phone : '',
+    linkedin: candidate ? candidate.linkedin : '',
+    curriculum: candidate ? candidate.curriculum : null,
+    selectedJobs: candidate ? candidate.jobs?.map(job => job.id) || [] : [],
+    experiences: candidate ? candidate.experiences || [
+      { company: '', position: '', period: '', description: '' }
+    ] : [
       { company: '', position: '', period: '', description: '' }
     ]
   });
@@ -64,6 +71,7 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const steps = ['Informações Pessoais', 'Experiência Profissional', 'Currículo e Vagas'];
 
@@ -73,13 +81,17 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/jobs');
-      if (!response.ok) throw new Error('Erro ao buscar vagas');
-      const data = await response.json();
-      setAvailableJobs(data.data || []);
+      const response = await api.get('/jobs', {
+        params: {
+          is_active: true,
+          per_page: 100
+        }
+      });
+      setAvailableJobs(response.data.data || []);
     } catch (error) {
-      console.error('Erro ao buscar vagas:', error);
-      setError('Erro ao carregar as vagas disponíveis');
+      enqueueSnackbar('Não foi possível carregar as vagas disponíveis.', { 
+        variant: 'error',
+      });
     }
   };
 
@@ -107,7 +119,7 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
         errors.experiences = experienceErrors;
       }
     } else if (activeStep === 2) {
-      if (!formData.curriculum && !initialData?.curriculum_url) {
+      if (!formData.curriculum && !candidate?.curriculum_url) {
         errors.curriculum = 'Currículo é obrigatório';
       }
       if (!formData.selectedJobs || formData.selectedJobs.length === 0) {
@@ -130,9 +142,22 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked, files } = e.target;
     
-    if (name === 'phone') {
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
+    } else if (type === 'checkbox') {
+      const jobId = parseInt(value);
+      setFormData(prev => ({
+        ...prev,
+        selectedJobs: checked
+          ? [...prev.selectedJobs, jobId]
+          : prev.selectedJobs.filter(id => id !== jobId)
+      }));
+    } else if (name === 'phone') {
       let phoneNumber = value.replace(/\D/g, '');
       phoneNumber = phoneNumber.slice(0, 11);
       
@@ -262,30 +287,46 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
     setLoading(true);
     setError(null);
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('linkedin', formData.linkedin);
-      
-      if (formData.curriculum) {
-        formDataToSend.append('curriculum', formData.curriculum);
+    const data = new FormData();
+    Object.keys(formData).forEach(key => {
+      if (key === 'selectedJobs') {
+        formData[key].forEach(id => {
+          data.append('job_ids[]', id);
+        });
+      } else if (formData[key] !== null) {
+        data.append(key, formData[key]);
       }
+    });
 
-      formDataToSend.append('experiences', JSON.stringify(formData.experiences));
-
-      if (formData.selectedJobs.length > 0) {
-        formData.selectedJobs.forEach(jobId => {
-          formDataToSend.append('jobs[]', jobId);
+    try {
+      if (candidate) {
+        await api.post(`/candidates/${candidate.id}`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        enqueueSnackbar('O candidato foi atualizado com sucesso.', { 
+          variant: 'success',
+        });
+      } else {
+        await api.post('/candidates', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        enqueueSnackbar('O candidato foi criado com sucesso.', { 
+          variant: 'success',
         });
       }
-
-      await onSubmit(formDataToSend);
-      onClose();
+      onSuccess();
     } catch (error) {
-      console.error('Erro:', error);
-      setError('Erro ao salvar candidato. Por favor, tente novamente.');
+      if (error.response?.data?.errors) {
+        setError(error.response.data.errors);
+      } else {
+        enqueueSnackbar('Ocorreu um erro ao salvar o candidato.', { 
+          variant: 'error',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -537,16 +578,7 @@ const CandidateForm = ({ onSubmit, initialData = null, onClose }) => {
                 <Select
                   multiple
                   value={formData.selectedJobs}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      selectedJobs: e.target.value
-                    }));
-                    setValidationErrors(prev => ({
-                      ...prev,
-                      selectedJobs: undefined
-                    }));
-                  }}
+                  onChange={handleChange}
                   input={<OutlinedInput label="Vagas de Interesse" />}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>

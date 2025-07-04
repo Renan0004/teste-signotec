@@ -9,34 +9,46 @@ return new class extends Migration
     public function up(): void
     {
         // Tabela de vagas
-        Schema::create('job_positions', function (Blueprint $table) {
+        Schema::create('jobs', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('description');
             $table->string('company');
             $table->string('location');
-            $table->enum('contract_type', ['CLT', 'PJ', 'FREELANCER']);
-            $table->boolean('is_active')->default(true);
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('type', ['full_time', 'part_time', 'contract', 'temporary', 'internship'])->default('full_time');
+            $table->enum('experience_level', ['internship', 'junior', 'mid_level', 'senior', 'expert', 'manager'])->default('junior');
+            $table->json('requirements');
+            $table->json('benefits');
+            $table->string('salary')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela de candidatos
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phone');
-            $table->string('curriculum_path')->nullable();
-            $table->text('resume');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('phone')->nullable();
+            $table->text('bio')->nullable();
+            $table->string('resume_path')->nullable();
+            $table->json('skills')->nullable();
+            $table->string('linkedin_url')->nullable();
+            $table->string('github_url')->nullable();
+            $table->string('portfolio_url')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
-        // Tabela de relacionamento entre candidatos e vagas
+        // Tabela pivot para candidaturas
         Schema::create('candidate_job', function (Blueprint $table) {
             $table->id();
             $table->foreignId('candidate_id')->constrained()->onDelete('cascade');
-            $table->foreignId('job_position_id')->constrained('job_positions')->onDelete('cascade');
+            $table->foreignId('job_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['pending', 'reviewing', 'approved', 'rejected'])->default('pending');
+            $table->text('notes')->nullable();
             $table->timestamps();
+            $table->unique(['candidate_id', 'job_id']);
         });
 
         // Tabela para tokens de API (Sanctum)
@@ -56,7 +68,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('candidate_job');
         Schema::dropIfExists('candidates');
-        Schema::dropIfExists('job_positions');
+        Schema::dropIfExists('jobs');
         Schema::dropIfExists('personal_access_tokens');
     }
 }; 

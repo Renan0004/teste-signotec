@@ -29,7 +29,9 @@ import {
   Select,
   MenuItem,
   Grid,
-  Link
+  Link,
+  Stack,
+  Checkbox
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -39,8 +41,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import SortIcon from '@mui/icons-material/Sort';
 import DownloadIcon from '@mui/icons-material/Download';
 import WorkIcon from '@mui/icons-material/Work';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FormModal from './FormModal';
 import CandidateForm from './CandidateForm';
+import api from '../services/api';
+import { useSnackbar } from 'notistack';
 
 const CandidateList = () => {
   const [candidates, setCandidates] = useState([]);
@@ -50,26 +55,30 @@ const CandidateList = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
-  const [feedback, setFeedback] = useState({ open: false, message: '', type: 'success' });
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [selectedCandidates, setSelectedCandidates] = useState([]);
+  const [perPage, setPerPage] = useState(20);
   const [totalCandidates, setTotalCandidates] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [jobs, setJobs] = useState([]);
+  const [feedback, setFeedback] = useState({ open: false, message: '', type: 'info' });
+  const { enqueueSnackbar } = useSnackbar();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchCandidates();
     fetchJobs();
-  }, [page, searchTerm, sortBy]);
+  }, [searchTerm, sortBy, sortDirection, perPage, page]);
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/jobs');
-      if (!response.ok) throw new Error('Erro ao buscar vagas');
-      const data = await response.json();
-      setJobs(data.data || []);
+      const response = await api.get('/jobs', {
+        params: { per_page: 100 }
+      });
+      setJobs(response.data.data || []);
     } catch (error) {
       console.error('Erro ao buscar vagas:', error);
     }
@@ -79,11 +88,18 @@ const CandidateList = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost:8000/api/candidates?page=${page}&search=${searchTerm}&sort=${sortBy}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setCandidates(data.data || []);
-      setTotalCandidates(data.total || 0);
+      const response = await api.get('/candidates', {
+        params: {
+          search: searchTerm,
+          sort_by: sortBy,
+          sort_direction: sortDirection,
+          per_page: perPage,
+          page: page
+        }
+      });
+      setCandidates(response.data.data);
+      setTotalCandidates(response.data.total);
+      setTotalPages(Math.ceil(response.data.total / response.data.per_page));
     } catch (error) {
       console.error('Erro ao buscar candidatos:', error);
       setError('Erro ao carregar os candidatos. Por favor, tente novamente.');
@@ -110,10 +126,8 @@ const CandidateList = () => {
 
       await fetchCandidates();
       handleCloseModal();
-      setFeedback({
-        open: true,
-        message: `Candidato ${selectedCandidate ? 'atualizado' : 'cadastrado'} com sucesso!`,
-        type: 'success'
+      enqueueSnackbar(`Candidato ${selectedCandidate ? 'atualizado' : 'cadastrado'} com sucesso!`, { 
+        variant: 'success' 
       });
     } catch (error) {
       console.error('Erro ao salvar candidato:', error);
@@ -131,10 +145,8 @@ const CandidateList = () => {
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       await fetchCandidates();
-      setFeedback({
-        open: true,
-        message: 'Candidato excluído com sucesso!',
-        type: 'success'
+      enqueueSnackbar('Candidato excluído com sucesso!', { 
+        variant: 'success' 
       });
     } catch (error) {
       console.error('Erro ao deletar candidato:', error);
@@ -155,10 +167,6 @@ const CandidateList = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedCandidate(null);
-  };
-
-  const handleCloseFeedback = () => {
-    setFeedback({ ...feedback, open: false });
   };
 
   const getJobTitles = (candidateJobs) => {
@@ -189,26 +197,53 @@ const CandidateList = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon color="primary" />
               </InputAdornment>
-            ),
+            )
           }}
+          sx={{ bgcolor: 'white', borderRadius: 2, boxShadow: '0 1px 4px rgba(33,150,243,0.04)' }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
-        <FormControl fullWidth>
+      <Grid item xs={6} sm={2}>
+        <FormControl fullWidth variant="outlined">
           <InputLabel>Ordenar</InputLabel>
           <Select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
             label="Ordenar"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            sx={{ bgcolor: 'white', borderRadius: 2 }}
           >
-            <MenuItem value="newest">Mais recentes</MenuItem>
-            <MenuItem value="oldest">Mais antigos</MenuItem>
+            <MenuItem value="created_at">Data de Cadastro</MenuItem>
             <MenuItem value="name">Nome</MenuItem>
-            <MenuItem value="email">Email</MenuItem>
+            <MenuItem value="email">E-mail</MenuItem>
           </Select>
         </FormControl>
+      </Grid>
+      <Grid item xs={6} sm={2}>
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Direção</InputLabel>
+          <Select
+            label="Direção"
+            value={sortDirection}
+            onChange={e => setSortDirection(e.target.value)}
+            sx={{ bgcolor: 'white', borderRadius: 2 }}
+          >
+            <MenuItem value="asc">Crescente</MenuItem>
+            <MenuItem value="desc">Decrescente</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} sm={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          startIcon={<AddIcon />}
+          onClick={handleAdd}
+          sx={{ height: '100%', fontWeight: 700, borderRadius: 2 }}
+        >
+          Novo Candidato
+        </Button>
       </Grid>
     </Grid>
   );
@@ -391,7 +426,7 @@ const CandidateList = () => {
 
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
         <Pagination
-          count={Math.ceil(totalCandidates / itemsPerPage)}
+          count={Math.ceil(totalCandidates / perPage)}
           page={page}
           onChange={(e, value) => setPage(value)}
           color="primary"
@@ -409,13 +444,6 @@ const CandidateList = () => {
           onClose={handleCloseModal}
         />
       </FormModal>
-
-      <Snackbar
-        open={feedback.open}
-        autoHideDuration={6000}
-        onClose={handleCloseFeedback}
-        message={feedback.message}
-      />
     </Box>
   );
 };

@@ -5,29 +5,45 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Candidate extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'email',
+        'user_id',
         'phone',
-        'curriculum_path'
+        'bio',
+        'resume_path',
+        'skills',
+        'linkedin_url',
+        'github_url',
+        'portfolio_url'
     ];
 
-    protected $appends = ['curriculum_url'];
+    protected $casts = [
+        'skills' => 'array'
+    ];
 
-    public function getCurriculumUrlAttribute()
+    protected $appends = ['resume_url'];
+
+    public function getResumeUrlAttribute()
     {
-        return $this->curriculum_path
-            ? asset('storage/' . $this->curriculum_path)
+        return $this->resume_path
+            ? asset('storage/' . $this->resume_path)
             : null;
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function jobs(): BelongsToMany
     {
-        return $this->belongsToMany(Job::class, 'candidate_job', 'candidate_id', 'job_position_id');
+        return $this->belongsToMany(Job::class, 'candidate_job')
+            ->withTimestamps()
+            ->withPivot('status', 'notes');
     }
 } 

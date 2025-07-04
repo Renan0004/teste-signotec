@@ -3,67 +3,80 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  Button,
   IconButton,
-  useMediaQuery,
-  useTheme,
+  Typography,
   Box
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Close as CloseIcon } from '@mui/icons-material';
 
-const FormModal = ({ open, onClose, title, children, maxWidth = 'sm' }) => {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+const FormModal = ({
+  open,
+  onClose,
+  title,
+  children,
+  onSubmit,
+  submitLabel = 'Salvar',
+  cancelLabel = 'Cancelar',
+  loading = false,
+  maxWidth = 'sm',
+  fullWidth = true,
+  hideActions = false
+}) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
-      fullScreen={fullScreen}
+      onClose={loading ? undefined : onClose}
       maxWidth={maxWidth}
-      fullWidth
-      PaperProps={{
-        sx: {
-          minHeight: '50vh',
-          maxHeight: '90vh',
-        },
-      }}
+      fullWidth={fullWidth}
     >
-      <DialogTitle 
-        sx={{ 
-          m: 0, 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          bgcolor: 'primary.main',
-          color: 'white'
-        }}
-      >
-        <Box component="span" sx={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-          {title}
-        </Box>
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            color: 'white',
-            '&:hover': {
-              bgcolor: 'primary.dark',
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent 
-        dividers
-        sx={{
-          p: 3,
-          overflow: 'auto'
-        }}
-      >
-        {children}
-      </DialogContent>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              {title}
+            </Typography>
+            {!loading && (
+              <IconButton
+                edge="end"
+                color="inherit"
+                onClick={onClose}
+                aria-label="close"
+                size="small"
+              >
+                <CloseIcon />
+              </IconButton>
+            )}
+          </Box>
+        </DialogTitle>
+
+        <DialogContent dividers>{children}</DialogContent>
+
+        {!hideActions && (
+          <DialogActions>
+            <Button
+              onClick={onClose}
+              disabled={loading}
+              color="inherit"
+            >
+              {cancelLabel}
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+            >
+              {loading ? 'Salvando...' : submitLabel}
+            </Button>
+          </DialogActions>
+        )}
+      </form>
     </Dialog>
   );
 };

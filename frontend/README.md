@@ -1,70 +1,163 @@
-# Getting Started with Create React App
+# Sistema de Vagas - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend do sistema de gerenciamento de vagas e candidatos desenvolvido com React e Material-UI.
 
-## Available Scripts
+## Tecnologias Utilizadas
 
-In the project directory, you can run:
+- React 18
+- Material-UI 5
+- React Router 6
+- Axios
+- Notistack
+- Date-fns
 
-### `npm start`
+## Funcionalidades
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Autenticação de usuários
+- Gerenciamento de vagas
+  - Listagem com paginação e busca
+  - Criação, edição e exclusão
+  - Status da vaga
+  - Requisitos e benefícios
+- Gerenciamento de candidatos
+  - Listagem com paginação e busca
+  - Criação, edição e exclusão
+  - Upload de currículo
+  - Informações profissionais
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Pré-requisitos
 
-### `npm test`
+- Node.js 16+
+- NPM 8+
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Instalação
 
-### `npm run build`
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/teste-signotec.git
+cd teste-signotec/frontend
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. Instale as dependências:
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. Crie o arquivo `.env` na raiz do projeto com as seguintes variáveis:
+```env
+REACT_APP_API_URL=http://localhost:8000/api
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Executando o Projeto
 
-### `npm run eject`
+1. Inicie o servidor de desenvolvimento:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. Acesse o sistema em: [http://localhost:3000](http://localhost:3000)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Build para Produção
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Gere o build:
+```bash
+npm run build
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. Os arquivos serão gerados na pasta `build`
 
-## Learn More
+## Estrutura do Projeto
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+src/
+  ├── components/       # Componentes reutilizáveis
+  ├── contexts/        # Contextos do React
+  ├── layouts/         # Layouts da aplicação
+  ├── pages/          # Páginas/rotas
+  ├── services/       # Serviços e API
+  ├── theme/          # Configuração do tema
+  ├── config/         # Configurações globais
+  └── App.js          # Componente principal
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Convenções de Código
 
-### Code Splitting
+- Componentes em PascalCase
+- Arquivos de componente: index.js
+- Hooks personalizados com prefixo "use"
+- Estilos com Material-UI sx prop
+- Prettier para formatação
+- ESLint para linting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Contribuindo
 
-### Analyzing the Bundle Size
+1. Crie uma branch para sua feature
+2. Faça commit das alterações
+3. Push para a branch
+4. Crie um Pull Request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Licença
 
-### Making a Progressive Web App
+Este projeto está sob a licença MIT.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+src/
+  ├── components/       # Componentes reutilizáveis
+  ├── contexts/        # Contextos do React
+  ├── layouts/         # Layouts da aplicação
+  ├── pages/          # Páginas/rotas
+  ├── services/       # Serviços e API
+  ├── theme/          # Configuração do tema
+  ├── config/         # Configurações globais
+  └── App.js          # Componente principal
+```
 
-### Advanced Configuration
+## Convenções de Código
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Componentes em PascalCase
+- Arquivos de componente: index.js
+- Hooks personalizados com prefixo "use"
+- Estilos com Material-UI sx prop
+- Prettier para formatação
+- ESLint para linting
 
-### Deployment
+## Contribuindo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+1. Crie uma branch para sua feature
+2. Faça commit das alterações
+3. Push para a branch
+4. Crie um Pull Request
 
-### `npm run build` fails to minify
+## Licença
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Este projeto está sob a licença MIT.
+
+src/
+  ├── components/       # Componentes reutilizáveis
+  ├── contexts/        # Contextos do React
+  ├── layouts/         # Layouts da aplicação
+  ├── pages/          # Páginas/rotas
+  ├── services/       # Serviços e API
+  ├── theme/          # Configuração do tema
+  ├── config/         # Configurações globais
+  └── App.js          # Componente principal
+```
+
+## Convenções de Código
+
+- Componentes em PascalCase
+- Arquivos de componente: index.js
+- Hooks personalizados com prefixo "use"
+- Estilos com Material-UI sx prop
+- Prettier para formatação
+- ESLint para linting
+
+## Contribuindo
+
+1. Crie uma branch para sua feature
+2. Faça commit das alterações
+3. Push para a branch
+4. Crie um Pull Request
+
+## Licença
+
+Este projeto está sob a licença MIT.
