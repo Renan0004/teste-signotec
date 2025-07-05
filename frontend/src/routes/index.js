@@ -13,59 +13,59 @@ import LoadingScreen from '../components/LoadingScreen';
 const AppLayout = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <AuthProvider>
-        <Outlet />
-      </AuthProvider>
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
     </Suspense>
   );
 };
 
 const router = createBrowserRouter([
-  {
+    {
     element: <AppLayout />,
     children: [
-      {
+    {
         path: '/',
         element: <Navigate to="/auth/login" replace />,
       },
-      {
-        path: 'auth',
-        element: <AuthLayout />,
-        children: [
-          {
-            path: 'login',
-            element: <Login />,
-          },
-          {
-            path: 'register',
-            element: <Register />,
-          },
-        ],
-      },
-      {
-        path: 'dashboard',
-        element: <DashboardLayout />,
-        children: [
-          {
-            path: '',
-            element: <Navigate to="jobs" replace />,
-          },
-          {
-            path: 'jobs',
-            element: <JobList />,
-          },
-          {
-            path: 'candidates',
-            element: <CandidateList />,
-          },
-        ],
-      },
-      {
+            {
+                path: 'auth',
+                element: <AuthLayout />,
+                children: [
+                    {
+                        path: 'login',
+                        element: <Login />,
+                    },
+                    {
+                        path: 'register',
+                        element: <Register />,
+                    },
+                ],
+            },
+            {
+                path: 'dashboard',
+                element: <DashboardLayout />,
+                children: [
+                    {
+                        path: '',
+                        element: <Navigate to="jobs" replace />,
+                    },
+                    {
+                        path: 'jobs',
+                        element: <JobList />,
+                    },
+                    {
+                        path: 'candidates',
+                        element: <CandidateList />,
+                    },
+                ],
+    },
+    {
         path: '*',
         element: <NotFound />,
       },
     ],
-  },
+    },
 ]);
 
 export default router; 

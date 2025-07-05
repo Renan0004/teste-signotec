@@ -2,11 +2,22 @@
 // config/cors.php
 return [
     'paths' => ['*', 'sanctum/csrf-cookie', 'api/*'],
-    'allowed_methods' => ['*'],
-    'allowed_origins' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        env('FRONTEND_URL', 'http://localhost:3000')
+    ],
     'allowed_origins_patterns' => [],
-    'allowed_headers' => ['*'],
-    'exposed_headers' => ['*'],
-    'max_age' => 0,
+    'allowed_headers' => [
+        'Content-Type',
+        'X-Requested-With',
+        'Authorization',
+        'X-XSRF-TOKEN',
+        'Accept',
+        'Origin'
+    ],
+    'exposed_headers' => [''],
+    'max_age' => 7200,
     'supports_credentials' => true,
 ]; 

@@ -35,7 +35,7 @@ class Job extends Model
     ];
 
     protected $attributes = [
-        'status' => 'active',
+        'status' => 'aberta',
         'type' => 'full_time'
     ];
 
@@ -48,7 +48,7 @@ class Job extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', 'aberta');
     }
 
     public function scopeSearch($query, $search)
@@ -119,8 +119,8 @@ class Job extends Model
             }
 
             // Valida status
-            if (!in_array($job->status, ['active', 'inactive'])) {
-                $job->status = 'active';
+            if (!in_array($job->status, ['aberta', 'fechada', 'em_andamento'])) {
+                $job->status = 'aberta';
             }
 
             // Valida tipo

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('company');
             $table->string('location');
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['aberta', 'fechada', 'em_andamento'])->default('aberta');
             $table->enum('type', ['full_time', 'part_time', 'contract', 'temporary', 'internship'])->default('full_time');
             $table->enum('experience_level', ['internship', 'junior', 'mid_level', 'senior', 'expert', 'manager'])->default('junior');
             $table->json('requirements');
@@ -28,7 +28,8 @@ return new class extends Migration
         // Tabela de candidatos
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->text('bio')->nullable();
             $table->string('resume_path')->nullable();

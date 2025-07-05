@@ -12,10 +12,11 @@ class Candidate extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'name',
+        'email',
         'phone',
-        'bio',
         'resume_path',
+        'bio',
         'skills',
         'linkedin_url',
         'github_url',
@@ -23,7 +24,10 @@ class Candidate extends Model
     ];
 
     protected $casts = [
-        'skills' => 'array'
+        'skills' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime'
     ];
 
     protected $appends = ['resume_url'];
@@ -33,11 +37,6 @@ class Candidate extends Model
         return $this->resume_path
             ? asset('storage/' . $this->resume_path)
             : null;
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 
     public function jobs(): BelongsToMany

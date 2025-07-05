@@ -18,7 +18,16 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+                'confirmed'
+            ],
             'password_confirmation' => ['required', 'string']
         ], [
             'name.required' => 'O nome é obrigatório',
@@ -32,6 +41,10 @@ class AuthController extends Controller
             'password.required' => 'A senha é obrigatória',
             'password.string' => 'A senha deve ser um texto',
             'password.min' => 'A senha deve ter no mínimo 8 caracteres',
+            'password.mixed' => 'A senha deve conter letras maiúsculas e minúsculas',
+            'password.numbers' => 'A senha deve conter números',
+            'password.symbols' => 'A senha deve conter caracteres especiais',
+            'password.uncompromised' => 'Esta senha já foi exposta em vazamentos de dados. Por favor, escolha outra',
             'password.confirmed' => 'As senhas não conferem',
             'password_confirmation.required' => 'A confirmação de senha é obrigatória'
         ]);
@@ -56,13 +69,13 @@ class AuthController extends Controller
 
             \Log::info('Usuário criado:', $user->toArray());
 
-            return response()->json([
+        return response()->json([
                 'message' => 'Usuário registrado com sucesso',
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email
                 ]
-            ], 201);
+        ], 201);
         } catch (\Exception $e) {
             \Log::error('Erro ao registrar usuário: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -98,30 +111,27 @@ class AuthController extends Controller
             // Tenta encontrar o usuário primeiro
             $user = User::where('email', $request->email)->first();
             
-            if (!$user) {
+            if (!$user || !Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'message' => 'E-mail ou senha inválidos'
                 ], 401);
             }
 
-            // Verifica a senha
-            if (!Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'message' => 'E-mail ou senha inválidos'
-                ], 401);
-            }
-
-            // Se chegou aqui, as credenciais são válidas
-            Auth::login($user);
+            // Gera o token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Atualiza o remember_token
-            $user->remember_token = Str::random(60);
-            $user->save();
+            // Remove dados sensíveis do usuário
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ];
 
             return response()->json([
                 'message' => 'Login realizado com sucesso',
-                'user' => $user,
+                'user' => $userData,
                 'token' => $token
             ]);
         } catch (\Exception $e) {
@@ -136,7 +146,7 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-            $request->user()->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
             return response()->json([
                 'message' => 'Logout realizado com sucesso'
             ]);
@@ -151,7 +161,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         try {
-            return response()->json($request->user());
+        return response()->json($request->user());
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao obter dados do usuário',

@@ -87,8 +87,8 @@ const Register = () => {
             <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
                     Crie sua conta no Sistema de Vagas
-                </Typography>
-            </Box>
+                            </Typography>
+                        </Box>
 
             {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -96,89 +96,89 @@ const Register = () => {
                 </Alert>
             )}
 
-            <TextField
+                                    <TextField
                 fullWidth
                 label="Nome completo"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
                 margin="normal"
                 required
-                autoFocus
+                                        autoFocus
                 error={!!error}
                 sx={{ mb: 2 }}
             />
 
-            <TextField
+                                    <TextField
                 fullWidth
-                label="E-mail"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
+                                        label="E-mail"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
                 sx={{ mb: 2 }}
             />
 
-            <TextField
+                                    <TextField
                 fullWidth
-                label="Senha"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleChange}
+                                        label="Senha"
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={formData.password}
+                                        onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
-                InputProps={{
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
                                 aria-label="toggle password visibility"
                                 onClick={() => setShowPassword(!showPassword)}
-                                edge="end"
-                            >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
                     ),
                 }}
                 sx={{ mb: 2 }}
             />
 
-            <TextField
+                                    <TextField
                 fullWidth
                 label="Confirmar senha"
-                name="password_confirmation"
+                                        name="password_confirmation"
                 type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.password_confirmation}
-                onChange={handleChange}
+                                        value={formData.password_confirmation}
+                                        onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
-                InputProps={{
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
                                 aria-label="toggle password visibility"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                edge="end"
-                            >
+                                                        edge="end"
+                                                    >
                                 {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
+                                                    </IconButton>
+                                                </InputAdornment>
                     ),
-                }}
+                                        }}
                 sx={{ mb: 3 }}
-            />
+                                    />
 
-            <Button
-                type="submit"
+                                <Button
+                                    type="submit"
                 fullWidth
-                variant="contained"
-                disabled={isSubmitting}
+                                    variant="contained"
+                                    disabled={isSubmitting}
                 sx={{
                     py: 1.5,
                     mb: 2,
@@ -191,22 +191,22 @@ const Register = () => {
                         boxShadow: 'none',
                     },
                 }}
-            >
+                                >
                 {isSubmitting ? 'Criando conta...' : 'Criar conta'}
-            </Button>
+                                </Button>
 
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                    Já tem uma conta?{' '}
+                            Já tem uma conta?{' '}
                     <Link
                         component={RouterLink}
                         to="/auth/login"
                         color="primary"
                         sx={{ fontWeight: 600, textDecoration: 'none' }}
                     >
-                        Faça login
-                    </Link>
-                </Typography>
+                                Faça login
+                            </Link>
+                        </Typography>
             </Box>
         </Box>
     );

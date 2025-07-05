@@ -64,8 +64,8 @@ const Login = () => {
             <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
                     Sistema de Gerenciamento de Vagas
-                </Typography>
-            </Box>
+                            </Typography>
+                        </Box>
 
             {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -73,51 +73,51 @@ const Login = () => {
                 </Alert>
             )}
 
-            <TextField
+                                    <TextField
                 fullWidth
-                label="E-mail"
-                type="email"
+                                        label="E-mail"
+                                        type="email"
                 value={email}
                 onChange={handleEmailChange}
                 margin="normal"
                 required
                 autoComplete="email"
-                autoFocus
+                                        autoFocus
                 error={!!error}
                 sx={{ mb: 2 }}
             />
 
-            <TextField
+                                    <TextField
                 fullWidth
-                label="Senha"
-                type={showPassword ? 'text' : 'password'}
+                                        label="Senha"
+                                        type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={handlePasswordChange}
                 margin="normal"
                 required
                 autoComplete="current-password"
                 error={!!error}
-                InputProps={{
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
                                 aria-label="toggle password visibility"
-                                onClick={handleClickShowPassword}
-                                edge="end"
-                            >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
+                                                        onClick={handleClickShowPassword}
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
                     ),
-                }}
+                                        }}
                 sx={{ mb: 3 }}
-            />
+                                    />
 
-            <Button
-                type="submit"
+                                <Button
+                                    type="submit"
                 fullWidth
-                variant="contained"
-                disabled={isSubmitting}
+                                    variant="contained"
+                                    disabled={isSubmitting}
                 sx={{
                     py: 1.5,
                     mb: 2,
@@ -130,13 +130,13 @@ const Login = () => {
                         boxShadow: 'none',
                     },
                 }}
-            >
+                                >
                 {isSubmitting ? 'Entrando...' : 'Entrar'}
-            </Button>
+                                </Button>
 
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                    Não tem uma conta?{' '}
+                            Não tem uma conta?{' '}
                     <Link
                         component={RouterLink}
                         to="/auth/register"
@@ -144,8 +144,8 @@ const Login = () => {
                         sx={{ fontWeight: 600, textDecoration: 'none' }}
                     >
                         Cadastre-se
-                    </Link>
-                </Typography>
+                            </Link>
+                        </Typography>
             </Box>
         </Box>
     );

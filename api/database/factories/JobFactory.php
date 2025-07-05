@@ -9,81 +9,43 @@ class JobFactory extends Factory
 {
     protected $model = Job::class;
 
-    public function definition(): array
+    public function definition()
     {
-        $jobTypes = ['full_time', 'part_time', 'contract', 'temporary', 'internship'];
+        $types = ['full_time', 'part_time', 'contract', 'temporary', 'internship'];
         $experienceLevels = ['internship', 'junior', 'mid_level', 'senior', 'expert', 'manager'];
-        $status = ['active', 'inactive'];
+        $status = ['aberta', 'fechada', 'em_andamento'];
         
-        $requirements = [
-            'JavaScript',
-            'React',
-            'Node.js',
-            'PHP',
-            'Laravel',
-            'MySQL',
-            'Git',
-            'Scrum',
-            'Inglês',
-            'TypeScript',
-            'Python',
-            'Java',
-            'C#',
-            '.NET',
-            'AWS',
-            'Docker',
-            'Kubernetes'
-        ];
-
-        $benefits = [
-            'Vale Refeição',
-            'Vale Transporte',
-            'Plano de Saúde',
-            'Plano Odontológico',
-            'Seguro de Vida',
-            'Gympass',
-            'Day Off no Aniversário',
-            'Home Office',
-            'Horário Flexível',
-            'PLR',
-            'Stock Options'
-        ];
-
         $companies = [
-            'TechCorp',
-            'InnovaSoft',
-            'DataTech',
-            'WebSolutions',
-            'CloudTech',
-            'DevHub',
-            'CodeMasters',
-            'DigitalWave',
-            'TechGlobal',
-            'ByteWorks'
+            'TechCorp Solutions',
+            'Digital Innovations Ltd',
+            'Software Systems Inc',
+            'Data Analytics Pro',
+            'Cloud Services Group',
+            'Web Solutions Brasil',
+            'Mobile Tech SA',
+            'AI Research Labs'
         ];
 
         $locations = [
             'São Paulo, SP',
             'Rio de Janeiro, RJ',
-            'Belo Horizonte, MG',
             'Curitiba, PR',
+            'Belo Horizonte, MG',
             'Porto Alegre, RS',
             'Florianópolis, SC',
-            'Recife, PE',
-            'Salvador, BA',
-            'Brasília, DF',
-            'Remoto'
+            'Remoto',
+            'Híbrido - São Paulo'
         ];
 
         $titles = [
-            'Desenvolvedor Full Stack',
-            'Desenvolvedor Frontend',
-            'Desenvolvedor Backend',
-            'Engenheiro de Software',
+            'Desenvolvedor Full Stack PHP/Laravel',
+            'Desenvolvedor Frontend React',
+            'Engenheiro de Software Senior',
+            'Desenvolvedor Backend Node.js',
             'Arquiteto de Software',
             'DevOps Engineer',
-            'QA Engineer',
-            'Tech Lead',
+            'Analista de Dados',
+            'UX/UI Designer',
             'Product Owner',
             'Scrum Master'
         ];
@@ -92,12 +54,31 @@ class JobFactory extends Factory
             'R$ 3.000 - R$ 4.500',
             'R$ 4.500 - R$ 6.000',
             'R$ 6.000 - R$ 8.000',
-            'R$ 8.000 - R$ 10.000',
-            'R$ 10.000 - R$ 13.000',
-            'R$ 13.000 - R$ 16.000',
-            'R$ 16.000 - R$ 20.000',
-            'Acima de R$ 20.000',
+            'R$ 8.000 - R$ 12.000',
+            'R$ 12.000 - R$ 15.000',
+            'R$ 15.000 - R$ 18.000',
             'A combinar'
+        ];
+
+        $requirements = [
+            'Conhecimento em PHP e Laravel',
+            'Experiência com React e TypeScript',
+            'Git e metodologias ágeis',
+            'Banco de dados MySQL/PostgreSQL',
+            'APIs RESTful',
+            'Docker e DevOps',
+            'Clean Code e SOLID'
+        ];
+
+        $benefits = [
+            'Vale Refeição',
+            'Vale Transporte',
+            'Plano de Saúde',
+            'Plano Odontológico',
+            'Gympass',
+            'Day Off no aniversário',
+            'Home Office',
+            'Horário Flexível'
         ];
 
         return [
@@ -105,16 +86,12 @@ class JobFactory extends Factory
             'description' => $this->faker->paragraphs(3, true),
             'company' => $this->faker->randomElement($companies),
             'location' => $this->faker->randomElement($locations),
-            'status' => $this->faker->randomElement($status),
-            'type' => $this->faker->randomElement($jobTypes),
+            'type' => $this->faker->randomElement($types),
             'experience_level' => $this->faker->randomElement($experienceLevels),
-            'requirements' => $this->faker->randomElements($requirements, $this->faker->numberBetween(3, 8)),
-            'benefits' => $this->faker->randomElements($benefits, $this->faker->numberBetween(3, 8)),
-            'salary' => $this->faker->randomElement($salaryRanges),
-            'created_at' => $this->faker->dateTimeBetween('-3 months', 'now'),
-            'updated_at' => function (array $attributes) {
-                return $this->faker->dateTimeBetween($attributes['created_at'], 'now');
-            }
+            'status' => $this->faker->randomElement($status),
+            'requirements' => $this->faker->randomElements($requirements, rand(3, 5)),
+            'benefits' => $this->faker->randomElements($benefits, rand(4, 6)),
+            'salary' => $this->faker->randomElement($salaryRanges)
         ];
     }
 

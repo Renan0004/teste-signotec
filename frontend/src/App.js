@@ -18,7 +18,7 @@ function App() {
         }}
         autoHideDuration={3000}
       >
-        <RouterProvider router={router} />
+      <RouterProvider router={router} />
       </SnackbarProvider>
     </ThemeProvider>
   );

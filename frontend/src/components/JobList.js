@@ -106,21 +106,13 @@ const JobList = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      const url = selectedJob
-        ? `http://localhost:8000/api/jobs/${selectedJob.id}`
-        : 'http://localhost:8000/api/jobs';
-
-      const method = selectedJob ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error('Erro ao salvar vaga');
+      let response;
+      
+      if (selectedJob) {
+        response = await api.put(`/jobs/${selectedJob.id}`, formData);
+      } else {
+        response = await api.post('/jobs', formData);
+      }
 
       await fetchJobs();
       handleCloseModal();
@@ -214,65 +206,61 @@ const JobList = () => {
 
   const renderFilters = () => (
     <Box sx={{ mb: 3 }}>
-      <Grid container spacing={2}>
+      <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={6} md={4}>
           <TextField
             fullWidth
-            variant="outlined"
-            placeholder="Buscar vagas..."
-            value={searchTerm}
-            onChange={handleFilterChange}
             name="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Pesquisar vagas..."
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon />
                 </InputAdornment>
-              )
+              ),
             }}
+            size={isMobile ? "small" : "medium"}
           />
         </Grid>
         <Grid item xs={6} sm={3} md={2}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size={isMobile ? "small" : "medium"}>
             <InputLabel>Status</InputLabel>
             <Select
-              value={filterStatus}
-              onChange={handleFilterChange}
               name="status"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
               label="Status"
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="active">Ativas</MenuItem>
-              <MenuItem value="paused">Pausadas</MenuItem>
+              <MenuItem value="active">Ativo</MenuItem>
+              <MenuItem value="inactive">Inativo</MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={6} sm={3} md={2}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size={isMobile ? "small" : "medium"}>
             <InputLabel>Tipo</InputLabel>
             <Select
-              value={filterType}
-              onChange={handleFilterChange}
               name="type"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
               label="Tipo"
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="full_time">Tempo Integral</MenuItem>
-              <MenuItem value="part_time">Meio Período</MenuItem>
-              <MenuItem value="contract">Contrato</MenuItem>
-              <MenuItem value="temporary">Temporário</MenuItem>
-              <MenuItem value="internship">Estágio</MenuItem>
+              <MenuItem value="CLT">CLT</MenuItem>
+              <MenuItem value="PJ">PJ</MenuItem>
+              <MenuItem value="Freelancer">Freelancer</MenuItem>
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={2}>
+        <Grid item xs={12} sm={12} md={4} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
           <Button
             variant="contained"
-            color="primary"
-            fullWidth
             startIcon={<AddIcon />}
             onClick={handleAdd}
-            sx={{ height: '100%', fontWeight: 700, borderRadius: 2 }}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             Nova Vaga
           </Button>
@@ -282,92 +270,101 @@ const JobList = () => {
   );
 
   const renderMobileView = () => (
-    <Box sx={{ width: '100%' }}>
-      {jobs.map((job) => (
-        <Card 
-          key={job.id} 
-          sx={{ 
-            mb: 2,
-            position: 'relative',
-            overflow: 'visible'
-          }}
-        >
-          <CardContent>
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Typography variant="h6" component="h2" gutterBottom>
-                  {job.title}
-                </Typography>
-                <Chip
-                  label={job.status === 'active' ? 'Ativa' : 'Pausada'}
-                  color={job.status === 'active' ? 'success' : 'default'}
-                  size="small"
-                />
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary">
-                {job.company}
-              </Typography>
-              
-              <Typography variant="body2">
-                <strong>Localização:</strong> {job.location}
-              </Typography>
-              
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  <strong>Tipo:</strong> {job.type}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  <strong>Salário:</strong> {job.salary || 'Não informado'}
-                </Typography>
-              </Box>
-              
-              {job.requirements && (
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    <strong>Requisitos:</strong>
+    <Box sx={{ width: '100%', mb: 2 }}>
+      <Grid container spacing={2}>
+        {jobs.map((job) => (
+          <Grid item xs={12} key={job.id}>
+            <Card
+              className="fade-in"
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative'
+              }}
+            >
+              <CardContent sx={{ flex: 1, pb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Typography variant="h6" component="h2" gutterBottom>
+                    {job.title}
                   </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                    {job.requirements.map((req, index) => (
-                      <Chip key={index} label={req} size="small" variant="outlined" />
-                    ))}
-                  </Stack>
+                  <Chip
+                    label={job.status}
+                    color={job.status === 'active' ? 'success' : 'default'}
+                    size="small"
+                    sx={{ ml: 1 }}
+                  />
                 </Box>
-              )}
-            </Stack>
-          </CardContent>
-          
-          <CardActions sx={{ justifyContent: 'flex-end', p: 2, pt: 0 }}>
-            <Button
-              size="small"
-              startIcon={<EditIcon />}
-              onClick={() => handleEdit(job)}
-            >
-              Editar
-            </Button>
-            <Button
-              size="small"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => handleDelete([job.id])}
-            >
-              Excluir
-            </Button>
-          </CardActions>
-        </Card>
-      ))}
+
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {job.company}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {job.location}
+                </Typography>
+
+                <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                  <Chip
+                    label={job.type}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`R$ ${job.salary.toLocaleString()}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Stack>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    mb: 2
+                  }}
+                >
+                  {job.description}
+                </Typography>
+              </CardContent>
+
+              <CardActions sx={{ p: 2, pt: 0, justifyContent: 'flex-end' }}>
+                <Button
+                  size="small"
+                  startIcon={<EditIcon />}
+                  onClick={() => handleEdit(job)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => handleDelete([job.id])}
+                >
+                  Excluir
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 
   const renderDesktopView = () => (
-    <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <TableContainer component={Paper} sx={{ mb: 2 }}>
       <Table>
         <TableHead>
           <TableRow>
             <TableCell padding="checkbox">
               <Checkbox
-                checked={selectedJobs.length === jobs.length}
                 indeterminate={selectedJobs.length > 0 && selectedJobs.length < jobs.length}
+                checked={jobs.length > 0 && selectedJobs.length === jobs.length}
                 onChange={handleSelectAll}
               />
             </TableCell>
@@ -381,16 +378,17 @@ const JobList = () => {
               </TableSortLabel>
             </TableCell>
             <TableCell>Empresa</TableCell>
-            <TableCell>Localização</TableCell>
+            <TableCell>Local</TableCell>
             <TableCell>
               <TableSortLabel
-                active={sortBy === 'type'}
+                active={sortBy === 'salary'}
                 direction={sortDirection}
-                onClick={() => handleSort('type')}
+                onClick={() => handleSort('salary')}
               >
-                Tipo
+                Salário
               </TableSortLabel>
             </TableCell>
+            <TableCell>Tipo</TableCell>
             <TableCell>Status</TableCell>
             <TableCell align="right">Ações</TableCell>
           </TableRow>
@@ -398,13 +396,10 @@ const JobList = () => {
         <TableBody>
           {jobs.map((job) => (
             <TableRow
+              hover
               key={job.id}
               selected={selectedJobs.includes(job.id)}
-              hover
-              sx={{
-                '&:last-child td, &:last-child th': { border: 0 },
-                transition: 'background-color 0.2s'
-              }}
+              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell padding="checkbox">
                 <Checkbox
@@ -412,48 +407,34 @@ const JobList = () => {
                   onChange={() => handleSelectJob(job.id)}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell component="th" scope="row">
                 <Typography variant="subtitle2">{job.title}</Typography>
-                {job.requirements && (
-                  <Box sx={{ mt: 1 }}>
-                    {job.requirements.slice(0, 2).map((req, index) => (
-                      <Chip
-                        key={index}
-                        label={req}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mr: 0.5, mb: 0.5 }}
-                      />
-                    ))}
-                    {job.requirements.length > 2 && (
-                      <Chip
-                        label={`+${job.requirements.length - 2}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mr: 0.5, mb: 0.5 }}
-                      />
-                    )}
-                  </Box>
-                )}
               </TableCell>
               <TableCell>{job.company}</TableCell>
               <TableCell>{job.location}</TableCell>
-              <TableCell>{job.type}</TableCell>
+              <TableCell>R$ {job.salary.toLocaleString()}</TableCell>
+              <TableCell>
+                <Chip label={job.type} size="small" />
+              </TableCell>
               <TableCell>
                 <Chip
-                  label={job.status === 'active' ? 'Ativa' : 'Pausada'}
+                  label={job.status}
                   color={job.status === 'active' ? 'success' : 'default'}
                   size="small"
                 />
               </TableCell>
               <TableCell align="right">
                 <Tooltip title="Editar">
-                  <IconButton size="small" onClick={() => handleEdit(job)} sx={{ mr: 1 }}>
+                  <IconButton size="small" onClick={() => handleEdit(job)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Excluir">
-                  <IconButton size="small" color="error" onClick={() => handleDelete([job.id])}>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDelete([job.id])}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -462,87 +443,43 @@ const JobList = () => {
           ))}
         </TableBody>
       </Table>
-      
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        p: 2,
-        borderTop: '1px solid',
-        borderColor: 'divider'
-      }}>
-        <Typography variant="body2" color="text.secondary">
-          {selectedJobs.length} {selectedJobs.length === 1 ? 'vaga selecionada' : 'vagas selecionadas'}
-        </Typography>
-        <TablePagination
-          component="div"
-          count={totalRows}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Itens por página"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-        />
-      </Box>
     </TableContainer>
   );
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 3,
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: 2
-      }}>
-        <Typography variant="h5" component="h1">
+    <div className="fade-in">
+      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
           Vagas
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
-        >
-          Nova Vaga
-        </Button>
-      </Box>
 
-      <Box sx={{ mb: 3 }}>
         {renderFilters()}
-      </Box>
 
-      {error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      ) : loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
+        {selectedJobs.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => handleDelete(selectedJobs)}
+            >
+              Excluir Selecionados ({selectedJobs.length})
+            </Button>
+          </Box>
+        )}
+
+        {isMobile ? renderMobileView() : renderDesktopView()}
+
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Pagination
+            count={totalPages}
+            page={page + 1}
+            onChange={(e, value) => handleChangePage(e, value - 1)}
+            color="primary"
+            size={isMobile ? "small" : "medium"}
+          />
         </Box>
-      ) : jobs.length === 0 ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-            p: 4,
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 1
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Nenhuma vaga encontrada
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Tente ajustar os filtros ou criar uma nova vaga
-          </Typography>
-        </Box>
-      ) : (
-        isMobile ? renderMobileView() : renderDesktopView()
-      )}
+      </Box>
 
       <FormModal
         open={modalOpen}
@@ -550,12 +487,12 @@ const JobList = () => {
         title={selectedJob ? 'Editar Vaga' : 'Nova Vaga'}
       >
         <JobForm
-          initialData={selectedJob}
           onSubmit={handleSubmit}
+          initialData={selectedJob}
           onCancel={handleCloseModal}
         />
       </FormModal>
-    </Box>
+    </div>
   );
 };
 

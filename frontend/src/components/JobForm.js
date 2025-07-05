@@ -123,7 +123,7 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
     
     if (!formData.type) {
       newErrors.type = 'O tipo de contratação é obrigatório';
-    }
+      }
     
     if (!formData.salary?.trim()) {
       newErrors.salary = 'A faixa salarial é obrigatória';
@@ -185,274 +185,284 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} noValidate>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Informações Básicas
-        </Typography>
-        
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <TextField
-              name="title"
-              label="Título da Vaga"
-              value={formData.title}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.title}
-              helperText={errors.title || 'Ex: Desenvolvedor Full Stack Senior'}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <WorkIcon color="primary" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="company"
-              label="Empresa"
-              value={formData.company}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.company}
-              helperText={errors.company}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <BusinessIcon color="primary" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="location"
-              label="Localização"
-              value={formData.location}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.location}
-              helperText={errors.location || 'Ex: São Paulo, SP ou Remoto'}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LocationIcon color="primary" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              name="description"
-              label="Descrição"
-              value={formData.description}
-              onChange={handleChange}
-              fullWidth
-              required
-              multiline
-              rows={4}
-              error={!!errors.description}
-              helperText={errors.description || 'Descreva as responsabilidades e requisitos da vaga (mínimo 50 caracteres)'}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <DescriptionIcon color="primary" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              {formData.description.length}/50 caracteres mínimos
+    <Box component="form" onSubmit={handleSubmit} noValidate className="fade-in">
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Informações Básicas
             </Typography>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Requisitos e Benefícios
-        </Typography>
-        
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Autocomplete
-              multiple
-              freeSolo
-              options={commonRequirements}
-              value={formData.requirements}
-              onChange={(_, newValue) => {
-                setFormData(prev => ({ ...prev, requirements: newValue }));
-                if (errors.requirements) {
-                  setErrors(prev => ({ ...prev, requirements: undefined }));
-                }
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
-              renderInput={(params) => (
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <TextField
-                  {...params}
-                  label="Requisitos"
-                  required
-                  error={!!errors.requirements}
-                  helperText={errors.requirements || 'Pressione Enter para adicionar requisitos personalizados'}
+                  fullWidth
+                  name="title"
+                  label="Título da Vaga"
+                  value={formData.title}
+                  onChange={handleChange}
+                  error={!!errors.title}
+                  helperText={errors.title}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WorkIcon />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              )}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Autocomplete
-              multiple
-              freeSolo
-              options={commonBenefits}
-              value={formData.benefits}
-              onChange={(_, newValue) => {
-                setFormData(prev => ({ ...prev, benefits: newValue }));
-                if (errors.benefits) {
-                  setErrors(prev => ({ ...prev, benefits: undefined }));
-                }
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
-              renderInput={(params) => (
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
                 <TextField
-                  {...params}
-                  label="Benefícios"
-                  required
-                  error={!!errors.benefits}
-                  helperText={errors.benefits || 'Pressione Enter para adicionar benefícios personalizados'}
+                  fullWidth
+                  name="company"
+                  label="Empresa"
+                  value={formData.company}
+                  onChange={handleChange}
+                  error={!!errors.company}
+                  helperText={errors.company}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <BusinessIcon />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              )}
-            />
-          </Grid>
-        </Grid>
-      </Paper>
+              </Grid>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Detalhes da Vaga
-        </Typography>
-        
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required error={!!errors.type}>
-              <InputLabel>Tipo de Contratação</InputLabel>
-              <Select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                label="Tipo de Contratação"
-              >
-                {jobTypes.map(type => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required error={!!errors.experience_level}>
-              <InputLabel>Nível de Experiência</InputLabel>
-              <Select
-                name="experience_level"
-                value={formData.experience_level}
-                onChange={handleChange}
-                label="Nível de Experiência"
-              >
-                {experienceLevels.map(level => (
-                  <MenuItem key={level.value} value={level.value}>
-                    {level.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.experience_level && (
-                <FormHelperText>{errors.experience_level}</FormHelperText>
-              )}
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              name="salary"
-              label="Faixa Salarial"
-              value={formData.salary}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.salary}
-              helperText={errors.salary || 'Ex: R$ 5.000 - R$ 7.000 ou A combinar'}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AttachMoneyIcon color="primary" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.status === 'active'}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    status: e.target.checked ? 'active' : 'inactive'
-                  }))}
-                  color="primary"
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  name="description"
+                  label="Descrição da Vaga"
+                  value={formData.description}
+                  onChange={handleChange}
+                  error={!!errors.description}
+                  helperText={errors.description}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <DescriptionIcon />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              }
-              label="Vaga Ativa"
-            />
-          </Grid>
-        </Grid>
-      </Paper>
+              </Grid>
 
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        <Button
-          variant="outlined"
-          onClick={onCancel}
-          disabled={loading}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={loading}
-        >
-          {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Criar Vaga'}
-        </Button>
-      </Box>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="location"
+                  label="Localização"
+                  value={formData.location}
+                  onChange={handleChange}
+                  error={!!errors.location}
+                  helperText={errors.location}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocationIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="salary"
+                  label="Salário"
+                  value={formData.salary}
+                  onChange={handleChange}
+                  error={!!errors.salary}
+                  helperText={errors.salary}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AttachMoneyIcon />
+                      </InputAdornment>
+                    ),
+                    startAdornment: (
+                      <InputAdornment position="start">R$</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Detalhes da Vaga
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.type}>
+                  <InputLabel>Tipo de Contratação</InputLabel>
+                  <Select
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    label="Tipo de Contratação"
+                  >
+                    {jobTypes.map(type => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.type && (
+                    <FormHelperText>{errors.type}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.experience_level}>
+                  <InputLabel>Nível de Experiência</InputLabel>
+                  <Select
+                    name="experience_level"
+                    value={formData.experience_level}
+                    onChange={handleChange}
+                    label="Nível de Experiência"
+                  >
+                    {experienceLevels.map(level => (
+                      <MenuItem key={level.value} value={level.value}>
+                        {level.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.experience_level && (
+                    <FormHelperText>{errors.experience_level}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  options={commonRequirements}
+                  value={formData.requirements}
+                  onChange={(e, newValue) => {
+                    setFormData(prev => ({ ...prev, requirements: newValue }));
+                    if (errors.requirements) {
+                      setErrors(prev => ({ ...prev, requirements: undefined }));
+                    }
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        variant="outlined"
+                        label={option}
+                        {...getTagProps({ index })}
+                        size="small"
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Requisitos"
+                      error={!!errors.requirements}
+                      helperText={errors.requirements}
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <SchoolIcon />
+                            </InputAdornment>
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  options={commonBenefits}
+                  value={formData.benefits}
+                  onChange={(e, newValue) => {
+                    setFormData(prev => ({ ...prev, benefits: newValue }));
+                    if (errors.benefits) {
+                      setErrors(prev => ({ ...prev, benefits: undefined }));
+                    }
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        variant="outlined"
+                        label={option}
+                        {...getTagProps({ index })}
+                        size="small"
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Benefícios"
+                      error={!!errors.benefits}
+                      helperText={errors.benefits}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.status === 'active'}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          status: e.target.checked ? 'active' : 'inactive'
+                        }));
+                      }}
+                      color="primary"
+                    />
+                  }
+                  label="Vaga Ativa"
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+            >
+              {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Criar'}
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

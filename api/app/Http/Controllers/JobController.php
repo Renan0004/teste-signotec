@@ -17,11 +17,15 @@ class JobController extends Controller
             $query = Job::query();
 
             // Filtros
-            if ($request->has('status') && $request->status !== 'todos') {
+            if ($request->has('status') && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
 
-            if ($request->has('search')) {
+            if ($request->has('type') && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -41,6 +45,9 @@ class JobController extends Controller
 
             return response()->json($jobs);
         } catch (\Exception $e) {
+            \Log::error('Erro ao buscar vagas: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Erro ao buscar vagas',
                 'error' => $e->getMessage()

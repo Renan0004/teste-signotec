@@ -81,6 +81,7 @@ const CandidateList = () => {
       setJobs(response.data.data || []);
     } catch (error) {
       console.error('Erro ao buscar vagas:', error);
+      setJobs([]);
     }
   };
 
@@ -97,13 +98,20 @@ const CandidateList = () => {
           page: page
         }
       });
-      setCandidates(response.data.data);
-      setTotalCandidates(response.data.total);
-      setTotalPages(Math.ceil(response.data.total / response.data.per_page));
+
+      if (!response.data) {
+        throw new Error('Resposta inválida da API');
+      }
+
+      setCandidates(response.data.data || []);
+      setTotalCandidates(response.data.total || 0);
+      setTotalPages(Math.ceil((response.data.total || 0) / (response.data.per_page || perPage)));
     } catch (error) {
       console.error('Erro ao buscar candidatos:', error);
       setError('Erro ao carregar os candidatos. Por favor, tente novamente.');
       setCandidates([]);
+      setTotalCandidates(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -185,263 +193,371 @@ const CandidateList = () => {
     );
   }
 
-  const renderFilters = () => (
-    <Grid container spacing={2} sx={{ mb: 3 }}>
-      <Grid item xs={12} sm={8}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar candidatos por nome, email ou telefone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="primary" />
-              </InputAdornment>
-            )
-          }}
-          sx={{ bgcolor: 'white', borderRadius: 2, boxShadow: '0 1px 4px rgba(33,150,243,0.04)' }}
-        />
-      </Grid>
-      <Grid item xs={6} sm={2}>
-        <FormControl fullWidth variant="outlined">
-          <InputLabel>Ordenar</InputLabel>
-          <Select
-            label="Ordenar"
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            sx={{ bgcolor: 'white', borderRadius: 2 }}
-          >
-            <MenuItem value="created_at">Data de Cadastro</MenuItem>
-            <MenuItem value="name">Nome</MenuItem>
-            <MenuItem value="email">E-mail</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={6} sm={2}>
-        <FormControl fullWidth variant="outlined">
-          <InputLabel>Direção</InputLabel>
-          <Select
-            label="Direção"
-            value={sortDirection}
-            onChange={e => setSortDirection(e.target.value)}
-            sx={{ bgcolor: 'white', borderRadius: 2 }}
-          >
-            <MenuItem value="asc">Crescente</MenuItem>
-            <MenuItem value="desc">Decrescente</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={2}>
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          sx={{ height: '100%', fontWeight: 700, borderRadius: 2 }}
-        >
-          Novo Candidato
-        </Button>
-      </Grid>
-    </Grid>
-  );
-
-  const renderMobileView = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {candidates.map((candidate) => (
-        <Card key={candidate.id}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              {candidate.name}
-            </Typography>
-            <Typography color="textSecondary" gutterBottom>
-              {candidate.email}
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              {candidate.phone}
-            </Typography>
-            {candidate.curriculum_url && (
-              <Button
-                variant="outlined"
-                size="small"
-                href={candidate.curriculum_url}
-                target="_blank"
-                startIcon={<DownloadIcon />}
-                sx={{ mt: 1, mb: 2 }}
-              >
-                Baixar Currículo
-              </Button>
-            )}
-            {getJobTitles(candidate.jobs).length > 0 && (
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Vagas de Interesse:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {getJobTitles(candidate.jobs).map((title, index) => (
-                    <Chip
-                      key={index}
-                      label={title}
-                      size="small"
-                      icon={<WorkIcon />}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-          </CardContent>
-          <CardActions>
-            <Button
-              startIcon={<EditIcon />}
-              onClick={() => handleEdit(candidate)}
-              size="small"
-            >
-              Editar
-            </Button>
-            <Button
-              startIcon={<DeleteIcon />}
-              color="error"
-              onClick={() => handleDelete(candidate.id)}
-              size="small"
-            >
-              Excluir
-            </Button>
-          </CardActions>
-        </Card>
-      ))}
-    </Box>
-  );
-
-  const renderDesktopView = () => (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Nome</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Telefone</TableCell>
-            <TableCell>Currículo</TableCell>
-            <TableCell>Vagas de Interesse</TableCell>
-            <TableCell>Ações</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {candidates.map((candidate) => (
-            <TableRow key={candidate.id}>
-              <TableCell>{candidate.name}</TableCell>
-              <TableCell>{candidate.email}</TableCell>
-              <TableCell>{candidate.phone}</TableCell>
-              <TableCell>
-                {candidate.curriculum_url && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    href={candidate.curriculum_url}
-                    target="_blank"
-                    startIcon={<DownloadIcon />}
-                  >
-                    Baixar
-                  </Button>
-                )}
-              </TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {getJobTitles(candidate.jobs).map((title, index) => (
-                    <Chip
-                      key={index}
-                      label={title}
-                      size="small"
-                      icon={<WorkIcon />}
-                    />
-                  ))}
-                </Box>
-              </TableCell>
-              <TableCell>
-                <Button
-                  startIcon={<EditIcon />}
-                  onClick={() => handleEdit(candidate)}
-                  sx={{ mr: 1 }}
-                >
-                  Editar
-                </Button>
-                <Button
-                  startIcon={<DeleteIcon />}
-                  color="error"
-                  onClick={() => handleDelete(candidate.id)}
-                >
-                  Excluir
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-
   return (
-    <Box sx={{ mt: 4 }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3,
-        borderBottom: '1px solid #e0e0e0',
-        pb: 2
-      }}>
+    <Box 
+      sx={{ 
+        p: { xs: 2, sm: 3 },
+        backgroundColor: 'background.default',
+        minHeight: '100vh'
+      }}
+      className="fade-in"
+    >
+      {/* Header */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 4,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2
+        }}
+      >
         <Box>
-          <Typography variant="h5" component="h2">
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 600,
+              color: 'text.primary',
+              mb: 1
+            }}
+          >
             Lista de Candidatos
           </Typography>
-          <Typography variant="subtitle2" color="textSecondary">
-            Total: {totalCandidates} {totalCandidates === 1 ? 'candidato' : 'candidatos'}
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+          >
+            Total: {totalCandidates} candidatos
           </Typography>
         </Box>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAdd}
           sx={{
-            bgcolor: 'primary.main',
+            minWidth: { xs: '100%', sm: 'auto' },
+            height: 48,
+            px: 3,
+            backgroundColor: 'primary.main',
             '&:hover': {
-              bgcolor: 'primary.dark',
+              backgroundColor: 'primary.dark',
+              transform: 'translateY(-1px)'
             },
+            transition: 'all 0.2s'
           }}
         >
           Novo Candidato
         </Button>
       </Box>
 
+      {/* Filters */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mb: 3,
+          borderRadius: 2,
+          backgroundColor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              placeholder="Buscar candidatos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'background.default',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: 'background.paper',
+                  }
+                }
+              }}
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth>
+              <InputLabel>Ordenar por</InputLabel>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                label="Ordenar por"
+              >
+                <MenuItem value="name">Nome</MenuItem>
+                <MenuItem value="email">E-mail</MenuItem>
+                <MenuItem value="created_at">Data de Cadastro</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth>
+              <InputLabel>Direção</InputLabel>
+              <Select
+                value={sortDirection}
+                onChange={(e) => setSortDirection(e.target.value)}
+                label="Direção"
+              >
+                <MenuItem value="asc">Crescente</MenuItem>
+                <MenuItem value="desc">Decrescente</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Error Message */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3,
+            borderRadius: 2
+          }}
+        >
           {error}
         </Alert>
       )}
 
-      {renderFilters()}
+      {/* Content */}
+      {candidates.length === 0 ? (
+        <Paper
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            borderRadius: 2,
+            backgroundColor: 'background.paper',
+            border: '1px dashed',
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant="h6" gutterBottom color="text.secondary">
+            Nenhum candidato encontrado
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Tente ajustar os filtros ou adicione um novo candidato
+          </Typography>
+        </Paper>
+      ) : (
+        <>
+          {isMobile ? (
+            <Grid container spacing={2}>
+              {candidates.map((candidate) => (
+                <Grid item xs={12} key={candidate.id}>
+                  <Card
+                    sx={{
+                      borderRadius: 2,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+                      },
+                      transition: 'all 0.3s'
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {candidate.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {candidate.email}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {candidate.phone}
+                      </Typography>
+                      
+                      {candidate.jobs && candidate.jobs.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Vagas de Interesse:
+                          </Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                            {getJobTitles(candidate.jobs).map((title, index) => (
+                              <Chip
+                                key={index}
+                                label={title}
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))}
+                          </Stack>
+                        </Box>
+                      )}
+                    </CardContent>
+                    
+                    <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                      <Button
+                        size="small"
+                        startIcon={<EditIcon />}
+                        onClick={() => handleEdit(candidate)}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => handleDelete(candidate.id)}
+                      >
+                        Excluir
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <TableContainer 
+              component={Paper}
+              sx={{ 
+                borderRadius: 2,
+                boxShadow: 'none',
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell>E-mail</TableCell>
+                    <TableCell>Telefone</TableCell>
+                    <TableCell>Currículo</TableCell>
+                    <TableCell>Vagas de Interesse</TableCell>
+                    <TableCell align="right">Ações</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {candidates.map((candidate) => (
+                    <TableRow
+                      key={candidate.id}
+                      hover
+                      sx={{
+                        '&:last-child td, &:last-child th': { border: 0 },
+                        transition: 'background-color 0.2s'
+                      }}
+                    >
+                      <TableCell component="th" scope="row">
+                        <Typography variant="subtitle2">
+                          {candidate.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{candidate.email}</TableCell>
+                      <TableCell>{candidate.phone}</TableCell>
+                      <TableCell>
+                        {candidate.resume_path && (
+                          <Link
+                            href={`http://localhost:8000/storage/${candidate.resume_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              color: 'primary.main',
+                              textDecoration: 'none',
+                              '&:hover': {
+                                textDecoration: 'underline'
+                              }
+                            }}
+                          >
+                            <DownloadIcon fontSize="small" />
+                            Baixar CV
+                          </Link>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                          {getJobTitles(candidate.jobs).map((title, index) => (
+                            <Chip
+                              key={index}
+                              label={title}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Editar">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(candidate)}
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Excluir">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(candidate.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
 
-      {isMobile ? renderMobileView() : renderDesktopView()}
+          {/* Pagination */}
+          <Box
+            sx={{
+              mt: 3,
+              display: 'flex',
+              justifyContent: 'center'
+            }}
+          >
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              color="primary"
+              size={isMobile ? "small" : "medium"}
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  borderRadius: 1
+                }
+              }}
+            />
+          </Box>
+        </>
+      )}
 
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <Pagination
-          count={Math.ceil(totalCandidates / perPage)}
-          page={page}
-          onChange={(e, value) => setPage(value)}
-          color="primary"
-        />
-      </Box>
-
+      {/* Modal */}
       <FormModal
         open={modalOpen}
         onClose={handleCloseModal}
         title={selectedCandidate ? 'Editar Candidato' : 'Novo Candidato'}
       >
         <CandidateForm
-          onSubmit={handleSubmit}
           initialData={selectedCandidate}
-          onClose={handleCloseModal}
+          onSubmit={handleSubmit}
+          onCancel={handleCloseModal}
+          availableJobs={jobs}
         />
       </FormModal>
     </Box>

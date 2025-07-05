@@ -344,293 +344,375 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
     width: 1,
   });
 
+  const StyledPaper = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(3),
+    marginBottom: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      transform: 'translateY(-2px)'
+    }
+  }));
+
+  const StyledAvatar = styled(Avatar)(({ theme }) => ({
+    width: 48,
+    height: 48,
+    backgroundColor: theme.palette.primary.main,
+    marginBottom: theme.spacing(2)
+  }));
+
+  const StyledStepper = styled(Stepper)(({ theme }) => ({
+    marginBottom: theme.spacing(4),
+    '& .MuiStepLabel-root .Mui-completed': {
+      color: theme.palette.success.main
+    },
+    '& .MuiStepLabel-label.Mui-completed.MuiStepLabel-alternativeLabel': {
+      color: theme.palette.success.main
+    },
+    '& .MuiStepLabel-root .Mui-active': {
+      color: theme.palette.primary.main
+    }
+  }));
+
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                name="name"
-                label="Nome Completo"
-                value={formData.name}
-                onChange={handleChange}
-                fullWidth
-                required
-                error={!!validationErrors.name}
-                helperText={validationErrors.name}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+          <StyledPaper elevation={0}>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <StyledAvatar>
+                <PersonIcon />
+              </StyledAvatar>
+              <Typography variant="h5" gutterBottom>
+                Informações Pessoais
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Preencha seus dados básicos de contato
+              </Typography>
+            </Box>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Nome Completo"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={!!validationErrors.name}
+                  helperText={validationErrors.name}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="E-mail"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!validationErrors.email}
+                  helperText={validationErrors.email}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Telefone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={!!validationErrors.phone}
+                  helperText={validationErrors.phone || '(00) 00000-0000'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="LinkedIn (opcional)"
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleChange}
+                  error={!!validationErrors.linkedin}
+                  helperText={validationErrors.linkedin}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LinkedInIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="email"
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                fullWidth
-                required
-                error={!!validationErrors.email}
-                helperText={validationErrors.email}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="phone"
-                label="Telefone"
-                value={formData.phone}
-                onChange={handleChange}
-                fullWidth
-                required
-                error={!!validationErrors.phone}
-                helperText={validationErrors.phone}
-                placeholder="(99) 99999-9999"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="linkedin"
-                label="LinkedIn"
-                value={formData.linkedin}
-                onChange={handleChange}
-                fullWidth
-                error={!!validationErrors.linkedin}
-                helperText={validationErrors.linkedin || 'URL do seu perfil no LinkedIn (opcional)'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkedInIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
+          </StyledPaper>
         );
 
       case 1:
         return (
-          <Box>
-            <List>
-              {formData.experiences.map((experience, index) => (
-                <Box key={index}>
-                  <ListItem>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Experiência {index + 1}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Empresa"
-                          value={experience.company}
-                          onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                          error={!!validationErrors.experiences?.[index]?.company}
-                          helperText={validationErrors.experiences?.[index]?.company}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Cargo"
-                          value={experience.position}
-                          onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
-                          error={!!validationErrors.experiences?.[index]?.position}
-                          helperText={validationErrors.experiences?.[index]?.position}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Período"
-                          value={experience.period}
-                          onChange={(e) => handleExperienceChange(index, 'period', e.target.value)}
-                          error={!!validationErrors.experiences?.[index]?.period}
-                          helperText={validationErrors.experiences?.[index]?.period || 'Ex: Jan/2020 - Atual'}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Descrição das Atividades"
-                          value={experience.description}
-                          onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                          multiline
-                          rows={3}
-                        />
-                      </Grid>
-                    </Grid>
-                    {formData.experiences.length > 1 && (
-                      <IconButton
-                        edge="end"
-                        onClick={() => removeExperience(index)}
-                        sx={{ position: 'absolute', right: 0, top: 0 }}
-                      >
-                        <RemoveCircleIcon color="error" />
-                      </IconButton>
-                    )}
-                  </ListItem>
-                  {index < formData.experiences.length - 1 && <Divider sx={{ my: 2 }} />}
-                </Box>
-              ))}
-            </List>
-            <Button
-              startIcon={<AddIcon />}
-              onClick={addExperience}
-              sx={{ mt: 2 }}
-            >
-              Adicionar Experiência
-            </Button>
-          </Box>
+          <StyledPaper elevation={0}>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <StyledAvatar>
+                <WorkIcon />
+              </StyledAvatar>
+              <Typography variant="h5" gutterBottom>
+                Experiência Profissional
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Conte-nos sobre sua trajetória profissional
+              </Typography>
+            </Box>
+
+            {formData.experiences.map((experience, index) => (
+              <Box key={index} sx={{ mb: 4, position: 'relative' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
+                  Experiência {index + 1}
+                </Typography>
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Empresa"
+                      value={experience.company}
+                      onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                      error={validationErrors.experiences?.[index]?.company}
+                      helperText={validationErrors.experiences?.[index]?.company}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Cargo"
+                      value={experience.position}
+                      onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
+                      error={validationErrors.experiences?.[index]?.position}
+                      helperText={validationErrors.experiences?.[index]?.position}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Período"
+                      value={experience.period}
+                      onChange={(e) => handleExperienceChange(index, 'period', e.target.value)}
+                      error={validationErrors.experiences?.[index]?.period}
+                      helperText={validationErrors.experiences?.[index]?.period}
+                      placeholder="Ex: Jan 2020 - Atual"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={4}
+                      label="Descrição das Atividades"
+                      value={experience.description}
+                      onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                      placeholder="Descreva suas principais responsabilidades e conquistas..."
+                    />
+                  </Grid>
+                </Grid>
+
+                {index > 0 && (
+                  <IconButton
+                    onClick={() => removeExperience(index)}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      color: 'error.main'
+                    }}
+                  >
+                    <RemoveCircleIcon />
+                  </IconButton>
+                )}
+              </Box>
+            ))}
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={addExperience}
+                variant="outlined"
+                sx={{ borderRadius: 2 }}
+              >
+                Adicionar Experiência
+              </Button>
+            </Box>
+          </StyledPaper>
         );
 
       case 2:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  border: '2px dashed',
-                  borderColor: validationErrors.curriculum ? 'error.main' : 'primary.main',
-                  borderRadius: 1,
-                  p: 3,
-                  textAlign: 'center',
-                  bgcolor: 'background.paper',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                    cursor: 'pointer'
-                  }}
-                />
-                <CloudUploadIcon color="primary" sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="h6" gutterBottom>
-                  {formData.curriculum ? formData.curriculum.name : 'Arraste seu currículo ou clique para selecionar'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  PDF ou Word (máx. 5MB)
-                </Typography>
-                {validationErrors.curriculum && (
-                  <Typography color="error" variant="caption" display="block">
-                    {validationErrors.curriculum}
-                  </Typography>
-                )}
-                {uploadProgress > 0 && uploadProgress < 100 && (
-                  <Box sx={{ width: '100%', mt: 2 }}>
-                    <LinearProgress variant="determinate" value={uploadProgress} />
-                  </Box>
-                )}
-                {previewUrl && (
-                  <Box sx={{ mt: 2 }}>
-                    <Button
-                      variant="outlined"
-                      href={previewUrl}
-                      target="_blank"
-                      startIcon={<DescriptionIcon />}
-                    >
-                      Visualizar PDF
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
+          <StyledPaper elevation={0}>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <StyledAvatar>
+                <DescriptionIcon />
+              </StyledAvatar>
+              <Typography variant="h5" gutterBottom>
+                Currículo e Vagas
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Anexe seu currículo e escolha as vagas de interesse
+              </Typography>
+            </Box>
 
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!validationErrors.selectedJobs}>
-                <InputLabel>Vagas de Interesse</InputLabel>
-                <Select
-                  multiple
-                  value={formData.selectedJobs}
-                  onChange={handleChange}
-                  input={<OutlinedInput label="Vagas de Interesse" />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((jobId) => {
-                        const job = availableJobs.find(j => j.id === jobId);
-                        return job ? (
-                          <Chip
-                            key={jobId}
-                            label={job.title}
-                            size="small"
-                            icon={<WorkIcon />}
-                          />
-                        ) : null;
-                      })}
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    border: '2px dashed',
+                    borderColor: validationErrors.curriculum ? 'error.main' : 'divider',
+                    borderRadius: 2,
+                    p: 3,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      backgroundColor: 'action.hover'
+                    }
+                  }}
+                  component="label"
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  <CloudUploadIcon color="action" sx={{ fontSize: 48, mb: 2 }} />
+                  <Typography variant="subtitle1" gutterBottom>
+                    {formData.curriculum
+                      ? `Arquivo selecionado: ${formData.curriculum.name}`
+                      : 'Arraste seu currículo aqui ou clique para selecionar'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Formatos aceitos: PDF, DOC, DOCX
+                  </Typography>
+                  {validationErrors.curriculum && (
+                    <Typography color="error" variant="caption" sx={{ display: 'block', mt: 1 }}>
+                      {validationErrors.curriculum}
+                    </Typography>
+                  )}
+                  {uploadProgress > 0 && (
+                    <Box sx={{ width: '100%', mt: 2 }}>
+                      <LinearProgress variant="determinate" value={uploadProgress} />
                     </Box>
                   )}
-                >
-                  {availableJobs.map((job) => (
-                    <MenuItem key={job.id} value={job.id}>
-                      <Box>
-                        <Typography variant="subtitle2">{job.title}</Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          {job.company} - {job.location}
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Vagas de Interesse
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Selecione as vagas que mais combinam com seu perfil
+                </Typography>
+                
                 {validationErrors.selectedJobs && (
-                  <FormHelperText>{validationErrors.selectedJobs}</FormHelperText>
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {validationErrors.selectedJobs}
+                  </Alert>
                 )}
-              </FormControl>
+
+                <Grid container spacing={2}>
+                  {availableJobs.map((job) => (
+                    <Grid item xs={12} sm={6} md={4} key={job.id}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          border: '1px solid',
+                          borderColor: formData.selectedJobs.includes(job.id)
+                            ? 'primary.main'
+                            : 'divider',
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                        onClick={() => {
+                          const isSelected = formData.selectedJobs.includes(job.id);
+                          handleChange({
+                            target: {
+                              type: 'checkbox',
+                              name: 'selectedJobs',
+                              value: job.id,
+                              checked: !isSelected
+                            }
+                          });
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                          <Checkbox
+                            checked={formData.selectedJobs.includes(job.id)}
+                            color="primary"
+                            sx={{ p: 0, mr: 1 }}
+                          />
+                          <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                              {job.title}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {job.location}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Grid>
             </Grid>
-          </Grid>
+          </StyledPaper>
         );
+
       default:
         return null;
     }
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, sm: 3 } }}>
+      <StyledStepper activeStep={activeStep} alternativeLabel>
         {steps.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
-      </Stepper>
+      </StyledStepper>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
@@ -640,21 +722,39 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
           <Button
-            disabled={activeStep === 0}
             onClick={handleBack}
+            disabled={activeStep === 0}
+            variant="outlined"
+            sx={{ 
+              minWidth: 100,
+              visibility: activeStep === 0 ? 'hidden' : 'visible'
+            }}
           >
             Voltar
           </Button>
-          <Box>
+          
+          {activeStep === steps.length - 1 ? (
             <Button
               variant="contained"
-              color="primary"
-              onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+              onClick={handleSubmit}
               disabled={loading}
+              sx={{ minWidth: 100 }}
             >
-              {activeStep === steps.length - 1 ? 'Salvar' : 'Próximo'}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Finalizar'
+              )}
             </Button>
-          </Box>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              sx={{ minWidth: 100 }}
+            >
+              Próximo
+            </Button>
+          )}
         </Box>
       </form>
     </Box>
