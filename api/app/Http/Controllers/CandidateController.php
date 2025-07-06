@@ -52,16 +52,17 @@ class CandidateController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255|min:3',
-                'email' => 'required|email:rfc,dns|unique:candidates',
+                'email' => 'required|email|unique:candidates',
                 'phone' => ['required', 'string', 'max:20', 'regex:/^\(\d{2}\)\s\d{5}-\d{4}$/'],
-                'resume' => 'required|file|mimes:pdf|max:5120', // max 5MB
+                'resume' => 'required|file|mimes:pdf,doc,docx|max:5120', // max 5MB
                 'bio' => 'nullable|string|max:1000',
+                'experiences' => 'nullable|string',
                 'skills' => 'nullable|array|min:1',
                 'skills.*' => 'required|string|max:50',
-                'linkedin_url' => ['nullable', 'url', 'regex:/^https:\/\/(www\.)?linkedin\.com\/.*$/'],
-                'github_url' => ['nullable', 'url', 'regex:/^https:\/\/(www\.)?github\.com\/.*$/'],
+                'linkedin_url' => ['nullable', 'url', 'regex:/^https?:\/\/(www\.)?linkedin\.com\/.*$/'],
+                'github_url' => ['nullable', 'url', 'regex:/^https?:\/\/(www\.)?github\.com\/.*$/'],
                 'portfolio_url' => 'nullable|url',
-                'job_ids' => 'nullable|array',
+                'job_ids' => 'required|array',
                 'job_ids.*' => 'exists:jobs,id'
             ], [
                 'name.required' => 'O nome é obrigatório',
@@ -71,9 +72,9 @@ class CandidateController extends Controller
                 'email.email' => 'Digite um e-mail válido',
                 'email.unique' => 'Este e-mail já está cadastrado',
                 'phone.required' => 'O telefone é obrigatório',
-                'phone.regex' => 'O telefone deve estar em um formato válido',
+                'phone.regex' => 'O telefone deve estar em um formato válido: (99) 99999-9999',
                 'resume.required' => 'O currículo é obrigatório',
-                'resume.mimes' => 'O currículo deve estar em formato PDF',
+                'resume.mimes' => 'O currículo deve estar em formato PDF, DOC ou DOCX',
                 'resume.max' => 'O currículo não pode ter mais que 5MB',
                 'bio.max' => 'A bio não pode ter mais que 1000 caracteres',
                 'skills.min' => 'Informe pelo menos uma habilidade',
@@ -84,16 +85,40 @@ class CandidateController extends Controller
                 'github_url.url' => 'O URL do GitHub deve ser válido',
                 'github_url.regex' => 'O URL do GitHub deve ser válido',
                 'portfolio_url.url' => 'O URL do portfólio deve ser válido',
+                'job_ids.required' => 'Selecione pelo menos uma vaga',
                 'job_ids.*.exists' => 'Uma ou mais vagas selecionadas não existem'
             ]);
+
+            // Criar dados do candidato
+            $candidateData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'linkedin_url' => $validated['linkedin_url'] ?? null,
+                'github_url' => $validated['github_url'] ?? null,
+                'portfolio_url' => $validated['portfolio_url'] ?? null,
+                'bio' => $validated['bio'] ?? null,
+            ];
+
+            // Processar experiências se fornecidas
+            if (isset($validated['experiences'])) {
+                try {
+                    $experiences = json_decode($validated['experiences'], true);
+                    if (is_array($experiences)) {
+                        $candidateData['experiences'] = $experiences;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao decodificar experiências: ' . $e->getMessage());
+                }
+            }
 
             // Upload do currículo
             if ($request->hasFile('resume')) {
                 $path = $request->file('resume')->store('resumes', 'public');
-                $validated['resume_path'] = $path;
+                $candidateData['resume_path'] = $path;
             }
 
-            $candidate = Candidate::create($validated);
+            $candidate = Candidate::create($candidateData);
 
             // Vincula as vagas selecionadas
             if (isset($validated['job_ids'])) {
@@ -102,6 +127,9 @@ class CandidateController extends Controller
 
             return response()->json($candidate, 201);
         } catch (\Exception $e) {
+            \Log::error('Erro ao criar candidato: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Erro ao criar candidato',
                 'error' => $e->getMessage()

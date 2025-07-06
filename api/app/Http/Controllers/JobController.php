@@ -160,17 +160,31 @@ class JobController extends Controller
     // Deletar uma vaga
     public function destroy(Request $request): JsonResponse
     {
-        // Deleção em massa
-        if ($request->has('ids')) {
-            $ids = explode(',', $request->input('ids'));
-            Job::whereIn('id', $ids)->delete();
-            return response()->json(['message' => 'Vagas excluídas com sucesso']);
-        }
+        try {
+            // Verificar se é uma requisição POST com _method=DELETE
+            $isMethodSpoofing = $request->isMethod('post') && $request->input('_method') === 'DELETE';
+            
+            // Deleção em massa
+            if ($request->has('ids') || ($isMethodSpoofing && $request->has('ids'))) {
+                $ids = $request->has('ids') ? explode(',', $request->input('ids')) : [];
+                Job::whereIn('id', $ids)->delete();
+                return response()->json(['message' => 'Vagas excluídas com sucesso']);
+            }
 
-        // Deleção única
-        $job = Job::findOrFail($request->route('id'));
-        $job->delete();
-        return response()->json(['message' => 'Vaga excluída com sucesso']);
+            // Deleção única
+            $jobId = $request->route('job');
+            $job = Job::findOrFail($jobId);
+            $job->delete();
+            return response()->json(['message' => 'Vaga excluída com sucesso']);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao excluir vaga: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'message' => 'Erro ao excluir vaga',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Buscar candidatos aplicados para uma vaga
@@ -184,5 +198,60 @@ class JobController extends Controller
     {
         $candidates = $job->candidates()->get();
         return response()->json($candidates);
+    }
+
+    // Método para lidar com requisições POST para update ou delete
+    public function updateOrDestroy(Request $request, $jobId): JsonResponse
+    {
+        try {
+            // Verificar se é uma requisição de exclusão
+            if ($request->input('_method') === 'DELETE') {
+                // Deleção única
+                $job = Job::findOrFail($jobId);
+                $job->delete();
+                return response()->json(['message' => 'Vaga excluída com sucesso']);
+            }
+            // Verificar se é uma requisição de atualização
+            else if ($request->input('_method') === 'PUT') {
+                $job = Job::findOrFail($jobId);
+                
+                $validator = Validator::make($request->all(), [
+                    'title' => 'required|string|max:255',
+                    'description' => 'required|string',
+                    'company' => 'required|string|max:255',
+                    'location' => 'required|string|max:255',
+                    'status' => 'required|in:aberta,fechada,em_andamento',
+                    'type' => 'required|string|max:255',
+                    'requirements' => 'required|string',
+                    'benefits' => 'nullable|string'
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'message' => 'Erro de validação',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+
+                // Remover o campo _method antes de atualizar
+                $data = $request->except('_method');
+                $job->update($data);
+                
+                return response()->json([
+                    'message' => 'Vaga atualizada com sucesso',
+                    'job' => $job
+                ]);
+            }
+            
+            return response()->json(['message' => 'Método não suportado'], 405);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao processar requisição: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'message' => 'Erro ao processar requisição',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 } 

@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Vagas
     Route::apiResource('jobs', JobController::class);
+    
+    // Rota adicional para permitir exclusão via POST
+    Route::post('/jobs/{job}', [JobController::class, 'updateOrDestroy']);
+    
     Route::get('/jobs/{job}/candidates', [JobController::class, 'candidates']);
 
     // Candidatos

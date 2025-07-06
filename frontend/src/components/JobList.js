@@ -121,9 +121,17 @@ const JobList = () => {
       console.log("Dados a serem enviados:", dataToSend);
       
       if (selectedJob) {
-        response = await api.put(`/jobs/${selectedJob.id}`, dataToSend);
+        console.log("Editando vaga existente:", selectedJob.id);
+        // Usando POST com _method: 'PUT' para contornar problemas com o método PUT
+        response = await api.post(`/jobs/${selectedJob.id}`, {
+          ...dataToSend,
+          _method: 'PUT'
+        });
+        console.log("Resposta da edição:", response);
       } else {
+        console.log("Criando nova vaga");
         response = await api.post('/jobs', dataToSend);
+        console.log("Resposta da criação:", response);
       }
 
       await fetchJobs();
@@ -131,6 +139,7 @@ const JobList = () => {
       enqueueSnackbar('Vaga salva com sucesso!', { variant: 'success' });
     } catch (error) {
       console.error('Erro ao salvar vaga:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
       enqueueSnackbar('Não foi possível salvar a vaga. Por favor, tente novamente mais tarde.', { variant: 'error' });
     }
   };
@@ -139,7 +148,19 @@ const JobList = () => {
     if (!window.confirm('Tem certeza que deseja excluir estas vagas?')) return;
 
     try {
-      await api.delete('/jobs', { params: { ids: ids.join(',') } });
+      // Modificando para usar o formato correto para requisições DELETE
+      if (ids.length === 1) {
+        // Para exclusão única
+        await api.post(`/jobs/${ids[0]}`, {
+          _method: 'DELETE'
+        });
+      } else {
+        // Para exclusão em massa
+        await api.post('/jobs', {
+          _method: 'DELETE',
+          ids: ids.join(',')
+        });
+      }
       enqueueSnackbar('Vagas excluídas com sucesso.', { variant: 'success' });
       setSelectedJobs([]);
       fetchJobs();

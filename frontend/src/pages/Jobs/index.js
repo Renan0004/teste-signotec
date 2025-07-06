@@ -93,7 +93,9 @@ const Jobs = () => {
     if (!deleteDialog.job?.id) return;
     
     try {
-      await api.delete(`/jobs/${deleteDialog.job.id}`);
+      await api.post(`/jobs/${deleteDialog.job.id}`, {
+        _method: 'DELETE'
+      });
       enqueueSnackbar('Vaga excluída com sucesso', { variant: 'success' });
       fetchJobs();
     } catch (error) {

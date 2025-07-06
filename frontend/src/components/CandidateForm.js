@@ -119,7 +119,7 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
         errors.experiences = experienceErrors;
       }
     } else if (activeStep === 2) {
-      if (!formData.curriculum && !candidate?.curriculum_url) {
+      if (!formData.curriculum && !candidate?.resume_url) {
         errors.curriculum = 'Currículo é obrigatório';
       }
       if (!formData.selectedJobs || formData.selectedJobs.length === 0) {
@@ -158,63 +158,32 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
           : prev.selectedJobs.filter(id => id !== jobId)
       }));
     } else if (name === 'phone') {
-      // Preservar a posição do cursor
-      const input = e.target;
-      const selectionStart = input.selectionStart;
-      
-      // Remover tudo que não é dígito
+      // Formatação de telefone
       const digits = value.replace(/\D/g, '');
-      
-      // Limitar a 11 dígitos
       const limitedDigits = digits.substring(0, 11);
       
-      // Aplicar máscara
       let formattedPhone = '';
-      
       if (limitedDigits.length <= 2) {
-        formattedPhone = limitedDigits;
+        formattedPhone = limitedDigits.length === 0 ? '' : `(${limitedDigits}`;
       } else if (limitedDigits.length <= 7) {
         formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2)}`;
       } else {
         formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2, 7)}-${limitedDigits.substring(7)}`;
       }
       
-      // Calcular a nova posição do cursor
-      const digitsBefore = value.substring(0, selectionStart).replace(/\D/g, '').length;
-      
       setFormData(prev => ({
         ...prev,
         [name]: formattedPhone
       }));
-      
-      // Definir um timeout para restaurar a posição do cursor após a renderização
-      setTimeout(() => {
-        if (input) {
-          let newCursorPosition = 0;
-          
-          // Calcular a nova posição do cursor com base nos dígitos antes do cursor
-          if (digitsBefore <= 2) {
-            newCursorPosition = digitsBefore;
-            if (digitsBefore === 2 && limitedDigits.length >= 2) newCursorPosition += 1; // Após o parêntese
-          } else if (digitsBefore <= 7) {
-            newCursorPosition = digitsBefore + 3; // (XX) + espaço
-          } else {
-            newCursorPosition = digitsBefore + 4; // (XX) + espaço + hífen
-          }
-          
-          // Garantir que a posição não ultrapasse o comprimento do texto
-          newCursorPosition = Math.min(newCursorPosition, formattedPhone.length);
-          
-          input.setSelectionRange(newCursorPosition, newCursorPosition);
-        }
-      }, 0);
     } else {
+      // Para todos os outros campos, simplesmente atualize o valor
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
     }
 
+    // Limpar erro de validação quando o campo é alterado
     if (validationErrors[name]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -318,21 +287,46 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep()) return;
+    console.log("Formulário submetido", formData);
+    
+    if (!validateStep()) {
+      console.log("Validação falhou", validationErrors);
+      enqueueSnackbar('Por favor, corrija os erros no formulário', { variant: 'error' });
+      return;
+    }
     
     setLoading(true);
     setError(null);
 
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (key === 'selectedJobs') {
-        formData[key].forEach(id => {
-          data.append('job_ids[]', id);
-        });
-      } else if (formData[key] !== null) {
-        data.append(key, formData[key]);
-      }
-    });
+    
+    // Adicionar campos básicos
+    data.append('name', formData.name);
+    data.append('email', formData.email);
+    data.append('phone', formData.phone);
+    
+    if (formData.linkedin) {
+      data.append('linkedin_url', formData.linkedin);
+    }
+    
+    // Adicionar experiências como JSON
+    if (formData.experiences && formData.experiences.length > 0) {
+      data.append('experiences', JSON.stringify(formData.experiences));
+    }
+    
+    // Adicionar currículo se houver
+    if (formData.curriculum instanceof File) {
+      data.append('resume', formData.curriculum);
+    }
+    
+    // Adicionar vagas selecionadas
+    if (formData.selectedJobs && formData.selectedJobs.length > 0) {
+      formData.selectedJobs.forEach(jobId => {
+        data.append('job_ids[]', jobId);
+      });
+    }
+
+    console.log("Dados a serem enviados:", Array.from(data.entries()));
 
     try {
       if (candidate) {
@@ -356,10 +350,28 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
       }
       onSuccess();
     } catch (error) {
+      console.error("Erro ao salvar candidato:", error.response || error);
+      
       if (error.response?.data?.errors) {
-        setError(error.response.data.errors);
+        const backendErrors = error.response.data.errors;
+        console.log("Erros do backend:", backendErrors);
+        
+        // Mapear erros do backend para o formato de validação do frontend
+        const mappedErrors = {};
+        Object.keys(backendErrors).forEach(key => {
+          mappedErrors[key] = backendErrors[key][0];
+        });
+        
+        setValidationErrors(prev => ({
+          ...prev,
+          ...mappedErrors
+        }));
+        
+        enqueueSnackbar('Por favor, corrija os erros no formulário.', { 
+          variant: 'error',
+        });
       } else {
-        enqueueSnackbar('Ocorreu um erro ao salvar o candidato.', { 
+        enqueueSnackbar('Ocorreu um erro ao salvar o candidato. Tente novamente.', { 
           variant: 'error',
         });
       }

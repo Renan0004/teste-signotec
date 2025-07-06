@@ -30,6 +30,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Adicionar cabeçalho para método DELETE
+    if (config.method === 'delete') {
+      config.headers['X-HTTP-Method-Override'] = 'DELETE';
+    }
+    
     return config;
   },
   (error) => {
@@ -168,12 +174,17 @@ export const jobsService = {
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/jobs/${id}`, data);
+    const response = await api.post(`/jobs/${id}`, {
+      ...data,
+      _method: 'PUT'
+    });
     return response;
   },
 
   delete: async (id) => {
-    const response = await api.delete(`/jobs/${id}`);
+    const response = await api.post(`/jobs/${id}`, {
+      _method: 'DELETE'
+    });
     return response;
   }
 };

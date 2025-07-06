@@ -20,11 +20,13 @@ class Candidate extends Model
         'skills',
         'linkedin_url',
         'github_url',
-        'portfolio_url'
+        'portfolio_url',
+        'experiences'
     ];
 
     protected $casts = [
         'skills' => 'array',
+        'experiences' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
