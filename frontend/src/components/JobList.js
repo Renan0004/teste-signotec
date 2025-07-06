@@ -105,6 +105,21 @@ const JobList = () => {
     }
   };
 
+  // Função para buscar uma vaga específica pelo ID
+  const fetchJobById = async (jobId) => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/jobs/${jobId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar vaga com ID ${jobId}:`, error);
+      enqueueSnackbar('Erro ao carregar dados da vaga', { variant: 'error' });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (formData) => {
     try {
       let response;
@@ -170,9 +185,37 @@ const JobList = () => {
     }
   };
 
-  const handleEdit = (job) => {
-    setSelectedJob(job);
-    setModalOpen(true);
+  const handleEdit = async (job) => {
+    console.log("Iniciando edição da vaga:", job.id);
+    
+    try {
+      // Buscar dados completos e atualizados da vaga
+      const fullJobData = await fetchJobById(job.id);
+      
+      if (!fullJobData) {
+        enqueueSnackbar('Não foi possível carregar os dados da vaga para edição', { variant: 'error' });
+        return;
+      }
+      
+      console.log("Dados completos da vaga recebidos:", fullJobData);
+      
+      // Garantir que os dados da vaga estão completos e formatados corretamente
+      const jobToEdit = {
+        ...fullJobData,
+        // Converter strings JSON para arrays se necessário
+        requirements: typeof fullJobData.requirements === 'string' ? 
+          JSON.parse(fullJobData.requirements) : fullJobData.requirements || [],
+        benefits: typeof fullJobData.benefits === 'string' ? 
+          JSON.parse(fullJobData.benefits) : fullJobData.benefits || []
+      };
+      
+      console.log("Dados formatados para edição:", jobToEdit);
+      setSelectedJob(jobToEdit);
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao preparar vaga para edição:", error);
+      enqueueSnackbar('Erro ao preparar vaga para edição', { variant: 'error' });
+    }
   };
 
   const handleAdd = () => {

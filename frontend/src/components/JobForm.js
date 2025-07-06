@@ -31,6 +31,8 @@ import api from '../services/api';
 import { useSnackbar } from 'notistack';
 
 const JobForm = ({ initialData, onSubmit, onCancel, formRef }) => {
+  console.log("JobForm - initialData recebido:", initialData);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -44,6 +46,8 @@ const JobForm = ({ initialData, onSubmit, onCancel, formRef }) => {
     benefits: [],
     ...initialData
   });
+
+  console.log("JobForm - formData após inicialização:", formData);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
