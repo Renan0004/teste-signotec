@@ -30,14 +30,14 @@ import {
 import api from '../services/api';
 import { useSnackbar } from 'notistack';
 
-const JobForm = ({ initialData, onSubmit, onCancel }) => {
+const JobForm = ({ initialData, onSubmit, onCancel, formRef }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     company: '',
     location: '',
     type: 'full_time',
-    status: 'active',
+    status: 'aberta',
     salary: '',
     experience_level: '',
     requirements: [],
@@ -159,6 +159,7 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Formulário submetido!", e);
     
     if (!validate()) {
       enqueueSnackbar('Por favor, corrija os erros no formulário', { variant: 'error' });
@@ -168,14 +169,34 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
     setLoading(true);
 
     try {
+      // Converter o salário para número se for uma string
+      let salary = formData.salary;
+      if (typeof salary === 'string') {
+        // Remove caracteres não numéricos (R$, espaços, pontos, etc)
+        salary = salary.replace(/[^\d]/g, '');
+        salary = parseInt(salary, 10);
+        if (isNaN(salary)) salary = 0;
+      }
+
+      // Preparar os dados para envio
       const dataToSend = {
         ...formData,
-        requirements: formData.requirements.map(req => req.trim()),
-        benefits: formData.benefits.map(ben => ben.trim())
+        salary: salary,
+        // Converter arrays para JSON strings como esperado pelo backend
+        requirements: JSON.stringify(formData.requirements),
+        benefits: JSON.stringify(formData.benefits)
       };
 
-      await onSubmit(dataToSend);
-      enqueueSnackbar('Vaga salva com sucesso!', { variant: 'success' });
+      console.log("Dados formatados para envio:", dataToSend);
+
+      if (typeof onSubmit === 'function') {
+        console.log("Chamando onSubmit");
+        await onSubmit(dataToSend);
+        console.log("onSubmit concluído com sucesso");
+      } else {
+        console.error('onSubmit não é uma função');
+        enqueueSnackbar('Erro ao processar o formulário', { variant: 'error' });
+      }
     } catch (error) {
       console.error('Erro ao salvar vaga:', error);
       enqueueSnackbar('Erro ao salvar a vaga. Por favor, tente novamente.', { variant: 'error' });
@@ -185,8 +206,18 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} noValidate className="fade-in">
+    <Box 
+      component="form" 
+      id="job-form" 
+      onSubmit={handleSubmit} 
+      noValidate 
+      className="fade-in"
+      ref={formRef}
+    >
       <Grid container spacing={3}>
+        {/* Botão de submit invisível para permitir submissão programática */}
+        <input type="submit" style={{ display: 'none' }} id="hidden-submit" />
+        
         <Grid item xs={12}>
           <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -283,11 +314,6 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
                   helperText={errors.salary}
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
-                        <AttachMoneyIcon />
-                      </InputAdornment>
-                    ),
-                    startAdornment: (
                       <InputAdornment position="start">R$</InputAdornment>
                     ),
                   }}
@@ -359,14 +385,19 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
                     }
                   }}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        variant="outlined"
-                        label={option}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
-                    ))
+                    value.map((option, index) => {
+                      const tagProps = getTagProps({ index });
+                      const { key, ...chipProps } = tagProps;
+                      return (
+                        <Chip
+                          key={key}
+                          variant="outlined"
+                          label={option}
+                          {...chipProps}
+                          size="small"
+                        />
+                      );
+                    })
                   }
                   renderInput={(params) => (
                     <TextField
@@ -403,14 +434,19 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
                     }
                   }}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        variant="outlined"
-                        label={option}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
-                    ))
+                    value.map((option, index) => {
+                      const tagProps = getTagProps({ index });
+                      const { key, ...chipProps } = tagProps;
+                      return (
+                        <Chip
+                          key={key}
+                          variant="outlined"
+                          label={option}
+                          {...chipProps}
+                          size="small"
+                        />
+                      );
+                    })
                   }
                   renderInput={(params) => (
                     <TextField
@@ -424,43 +460,25 @@ const JobForm = ({ initialData, onSubmit, onCancel }) => {
               </Grid>
 
               <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.status === 'active'}
-                      onChange={(e) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          status: e.target.checked ? 'active' : 'inactive'
-                        }));
-                      }}
-                      color="primary"
-                    />
-                  }
-                  label="Vaga Ativa"
-                />
+                <FormControl fullWidth>
+                  <InputLabel>Status da Vaga</InputLabel>
+                  <Select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    label="Status da Vaga"
+                  >
+                    <MenuItem value="aberta">Aberta</MenuItem>
+                    <MenuItem value="fechada">Fechada</MenuItem>
+                    <MenuItem value="em_andamento">Em Andamento</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    Define se a vaga está aceitando candidaturas
+                  </FormHelperText>
+                </FormControl>
               </Grid>
             </Grid>
           </Paper>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
-              onClick={onCancel}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-            >
-              {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Criar'}
-            </Button>
-          </Box>
         </Grid>
       </Grid>
     </Box>

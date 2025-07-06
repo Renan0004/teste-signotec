@@ -35,6 +35,32 @@ const Register = () => {
         setError(''); // Limpa o erro quando o usuário começa a digitar
     };
 
+    const validatePassword = (password) => {
+        const errors = [];
+        
+        if (password.length < 8) {
+            errors.push('A senha deve ter no mínimo 8 caracteres');
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+            errors.push('A senha deve conter pelo menos uma letra maiúscula');
+        }
+        
+        if (!/[a-z]/.test(password)) {
+            errors.push('A senha deve conter pelo menos uma letra minúscula');
+        }
+        
+        if (!/[0-9]/.test(password)) {
+            errors.push('A senha deve conter pelo menos um número');
+        }
+        
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            errors.push('A senha deve conter pelo menos um caractere especial');
+        }
+        
+        return errors;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -53,8 +79,10 @@ const Register = () => {
             return;
         }
 
-        if (formData.password.length < 8) {
-            setError('A senha deve ter no mínimo 8 caracteres.');
+        // Validação de senha forte
+        const passwordErrors = validatePassword(formData.password);
+        if (passwordErrors.length > 0) {
+            setError(passwordErrors.join('. '));
             setIsSubmitting(false);
             return;
         }
@@ -87,8 +115,8 @@ const Register = () => {
             <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
                     Crie sua conta no Sistema de Vagas
-                            </Typography>
-                        </Box>
+                </Typography>
+            </Box>
 
             {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -96,89 +124,90 @@ const Register = () => {
                 </Alert>
             )}
 
-                                    <TextField
+            <TextField
                 fullWidth
                 label="Nome completo"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
                 margin="normal"
                 required
-                                        autoFocus
+                autoFocus
                 error={!!error}
                 sx={{ mb: 2 }}
             />
 
-                                    <TextField
+            <TextField
                 fullWidth
-                                        label="E-mail"
-                                        name="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
+                label="E-mail"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
                 sx={{ mb: 2 }}
             />
 
-                                    <TextField
+            <TextField
                 fullWidth
-                                        label="Senha"
-                                        name="password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={formData.password}
-                                        onChange={handleChange}
+                label="Senha"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton
+                helperText="A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos."
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <IconButton
                                 aria-label="toggle password visibility"
                                 onClick={() => setShowPassword(!showPassword)}
-                                                        edge="end"
-                                                    >
-                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
+                                edge="end"
+                            >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                        </InputAdornment>
                     ),
                 }}
                 sx={{ mb: 2 }}
             />
 
-                                    <TextField
+            <TextField
                 fullWidth
                 label="Confirmar senha"
-                                        name="password_confirmation"
+                name="password_confirmation"
                 type={showConfirmPassword ? 'text' : 'password'}
-                                        value={formData.password_confirmation}
-                                        onChange={handleChange}
+                value={formData.password_confirmation}
+                onChange={handleChange}
                 margin="normal"
                 required
                 error={!!error}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <IconButton
                                 aria-label="toggle password visibility"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                        edge="end"
-                                                    >
+                                edge="end"
+                            >
                                 {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
+                            </IconButton>
+                        </InputAdornment>
                     ),
-                                        }}
+                }}
                 sx={{ mb: 3 }}
-                                    />
+            />
 
-                                <Button
-                                    type="submit"
+            <Button
+                type="submit"
                 fullWidth
-                                    variant="contained"
-                                    disabled={isSubmitting}
+                variant="contained"
+                disabled={isSubmitting}
                 sx={{
                     py: 1.5,
                     mb: 2,
@@ -191,22 +220,22 @@ const Register = () => {
                         boxShadow: 'none',
                     },
                 }}
-                                >
+            >
                 {isSubmitting ? 'Criando conta...' : 'Criar conta'}
-                                </Button>
+            </Button>
 
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                            Já tem uma conta?{' '}
+                    Já tem uma conta?{' '}
                     <Link
                         component={RouterLink}
                         to="/auth/login"
                         color="primary"
                         sx={{ fontWeight: 600, textDecoration: 'none' }}
                     >
-                                Faça login
-                            </Link>
-                        </Typography>
+                        Faça login
+                    </Link>
+                </Typography>
             </Box>
         </Box>
     );

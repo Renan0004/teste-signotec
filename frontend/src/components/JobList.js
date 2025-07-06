@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -68,6 +68,7 @@ const JobList = () => {
   const [perPage, setPerPage] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const { enqueueSnackbar } = useSnackbar();
+  const formRef = useRef(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -108,10 +109,21 @@ const JobList = () => {
     try {
       let response;
       
+      // Garantir que os dados estejam no formato correto para o backend
+      const dataToSend = {
+        ...formData,
+        // Garantir que o salary seja um número
+        salary: typeof formData.salary === 'string' ? 
+          parseInt(formData.salary.replace(/[^\d]/g, ''), 10) || 0 : 
+          formData.salary || 0,
+      };
+      
+      console.log("Dados a serem enviados:", dataToSend);
+      
       if (selectedJob) {
-        response = await api.put(`/jobs/${selectedJob.id}`, formData);
+        response = await api.put(`/jobs/${selectedJob.id}`, dataToSend);
       } else {
-        response = await api.post('/jobs', formData);
+        response = await api.post('/jobs', dataToSend);
       }
 
       await fetchJobs();
@@ -234,8 +246,9 @@ const JobList = () => {
               label="Status"
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="active">Ativo</MenuItem>
-              <MenuItem value="inactive">Inativo</MenuItem>
+              <MenuItem value="aberta">Aberta</MenuItem>
+              <MenuItem value="fechada">Fechada</MenuItem>
+              <MenuItem value="em_andamento">Em Andamento</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -249,9 +262,11 @@ const JobList = () => {
               label="Tipo"
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="CLT">CLT</MenuItem>
-              <MenuItem value="PJ">PJ</MenuItem>
-              <MenuItem value="Freelancer">Freelancer</MenuItem>
+              <MenuItem value="full_time">Tempo Integral</MenuItem>
+              <MenuItem value="part_time">Meio Período</MenuItem>
+              <MenuItem value="contract">Contrato</MenuItem>
+              <MenuItem value="temporary">Temporário</MenuItem>
+              <MenuItem value="internship">Estágio</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -289,8 +304,8 @@ const JobList = () => {
                     {job.title}
                   </Typography>
                   <Chip
-                    label={job.status}
-                    color={job.status === 'active' ? 'success' : 'default'}
+                    label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
+                    color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
                     size="small"
                     sx={{ ml: 1 }}
                   />
@@ -306,7 +321,10 @@ const JobList = () => {
 
                 <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
                   <Chip
-                    label={job.type}
+                    label={job.type === 'full_time' ? 'Tempo Integral' : 
+                           job.type === 'part_time' ? 'Meio Período' : 
+                           job.type === 'contract' ? 'Contrato' : 
+                           job.type === 'temporary' ? 'Temporário' : 'Estágio'}
                     size="small"
                     variant="outlined"
                   />
@@ -414,12 +432,18 @@ const JobList = () => {
               <TableCell>{job.location}</TableCell>
               <TableCell>R$ {job.salary.toLocaleString()}</TableCell>
               <TableCell>
-                <Chip label={job.type} size="small" />
+                <Chip label={job.type === 'full_time' ? 'Tempo Integral' : 
+                           job.type === 'part_time' ? 'Meio Período' : 
+                           job.type === 'contract' ? 'Contrato' : 
+                           job.type === 'temporary' ? 'Temporário' : 'Estágio'}
+                    size="small"
+                    variant="outlined"
+                  />
               </TableCell>
               <TableCell>
                 <Chip
-                  label={job.status}
-                  color={job.status === 'active' ? 'success' : 'default'}
+                  label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
+                  color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
                   size="small"
                 />
               </TableCell>
@@ -485,11 +509,26 @@ const JobList = () => {
         open={modalOpen}
         onClose={handleCloseModal}
         title={selectedJob ? 'Editar Vaga' : 'Nova Vaga'}
+        onSubmit={() => {
+          console.log("Botão salvar clicado");
+          if (formRef.current) {
+            console.log("Referência do formulário encontrada, chamando handleSubmit");
+            // Simular um evento de submit
+            formRef.current.dispatchEvent(
+              new Event('submit', { bubbles: true, cancelable: true })
+            );
+          } else {
+            console.error("Referência do formulário não encontrada");
+          }
+        }}
+        submitLabel="Salvar"
+        hideActions={false}
       >
         <JobForm
           onSubmit={handleSubmit}
           initialData={selectedJob}
           onCancel={handleCloseModal}
+          formRef={formRef}
         />
       </FormModal>
     </div>

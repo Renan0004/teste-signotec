@@ -44,7 +44,6 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   padding: theme.spacing(2, 3),
-  backgroundColor: theme.palette.background.default,
   borderBottom: `1px solid ${theme.palette.divider}`,
   position: 'sticky',
   top: 0,
@@ -73,7 +72,6 @@ const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
   padding: theme.spacing(2, 3),
-  backgroundColor: theme.palette.background.default,
   borderTop: `1px solid ${theme.palette.divider}`,
   position: 'sticky',
   bottom: 0,
@@ -108,9 +106,15 @@ const FormModal = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(e);
+    if (e) e.preventDefault();
+    console.log("Botão salvar clicado");
+    if (typeof onSubmit === 'function') {
+      onSubmit(e);
+    } else {
+      console.error('onSubmit não é uma função');
+    }
   };
+
 
   return (
     <StyledDialog
@@ -132,7 +136,7 @@ const FormModal = ({
       }}
     >
       <Fade in={open}>
-        <form onSubmit={handleSubmit}>
+        <Box>
           <StyledDialogTitle>
             <Box sx={{ 
               display: 'flex', 
@@ -195,8 +199,9 @@ const FormModal = ({
                 {cancelLabel}
               </Button>
               <Button
-                type="submit"
+                onClick={handleSubmit}
                 variant="contained"
+                type="submit"
                 disabled={loading}
                 sx={{
                   minWidth: 100,
@@ -215,7 +220,7 @@ const FormModal = ({
               </Button>
             </StyledDialogActions>
           )}
-        </form>
+        </Box>
       </Fade>
     </StyledDialog>
   );

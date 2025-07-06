@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         // Criar usuário admin
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'email' => 'admin@exemplo.com',
             'password' => Hash::make('password'),
         ]);
 
@@ -36,16 +36,26 @@ class DatabaseSeeder extends Seeder
             // Criar diretório se não existir
             File::makeDirectory(storage_path('app/public'), 0755, true, true);
             
-            // Criar um PDF simples com FPDF
-            require_once base_path('vendor/setasign/fpdf/fpdf.php');
-            $pdf = new \FPDF();
-            $pdf->AddPage();
-            $pdf->SetFont('Arial', 'B', 16);
-            $pdf->Cell(40, 10, 'Curriculo de Exemplo');
-            $pdf->Ln();
-            $pdf->SetFont('Arial', '', 12);
-            $pdf->MultiCell(0, 10, 'Este é um currículo de exemplo para teste do sistema.');
-            $pdf->Output('F', $samplePdfPath);
+            try {
+                // Verificar se FPDF está disponível
+                if (class_exists('\FPDF')) {
+                    // Criar um PDF simples com FPDF
+                    $pdf = new \FPDF();
+                    $pdf->AddPage();
+                    $pdf->SetFont('Arial', 'B', 16);
+                    $pdf->Cell(40, 10, 'Curriculo de Exemplo');
+                    $pdf->Ln();
+                    $pdf->SetFont('Arial', '', 12);
+                    $pdf->MultiCell(0, 10, 'Este é um currículo de exemplo para teste do sistema.');
+                    $pdf->Output('F', $samplePdfPath);
+                } else {
+                    // Criar um arquivo de texto simples como fallback
+                    File::put($samplePdfPath, 'Currículo de exemplo para teste');
+                }
+            } catch (\Exception $e) {
+                // Criar um arquivo de texto simples como fallback em caso de erro
+                File::put($samplePdfPath, 'Currículo de exemplo para teste');
+            }
         }
 
         // Associar o currículo a alguns candidatos

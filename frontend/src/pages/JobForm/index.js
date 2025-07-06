@@ -29,9 +29,9 @@ const contractTypes = [
 ];
 
 const statusOptions = [
-  'Aberta',
-  'Fechada',
-  'Em análise'
+  { value: 'aberta', label: 'Aberta' },
+  { value: 'fechada', label: 'Fechada' },
+  { value: 'em_andamento', label: 'Em Andamento' }
 ];
 
 const experienceLevels = [
@@ -67,7 +67,7 @@ const JobForm = () => {
     description: '',
     requirements: [],
     contract_type: '',
-    status: 'Aberta',
+    status: 'aberta',
     salary_range: '',
     experience_level: '',
     benefits: [],
@@ -260,9 +260,9 @@ const JobForm = () => {
                   onChange={handleChange}
                   disabled={loading}
                 >
-                  {statusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
+                  {statusOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
                     </MenuItem>
                   ))}
                 </Select>

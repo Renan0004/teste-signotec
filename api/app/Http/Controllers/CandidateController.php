@@ -53,7 +53,7 @@ class CandidateController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255|min:3',
                 'email' => 'required|email:rfc,dns|unique:candidates',
-                'phone' => ['required', 'string', 'max:20', 'regex:/^\+?[1-9]\d{1,14}$/'],
+                'phone' => ['required', 'string', 'max:20', 'regex:/^\(\d{2}\)\s\d{5}-\d{4}$/'],
                 'resume' => 'required|file|mimes:pdf|max:5120', // max 5MB
                 'bio' => 'nullable|string|max:1000',
                 'skills' => 'nullable|array|min:1',
@@ -129,7 +129,7 @@ class CandidateController extends Controller
             $validated = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
                 'email' => ['sometimes', 'required', 'email', Rule::unique('candidates')->ignore($candidate->id)],
-                'phone' => 'sometimes|required|string|max:20',
+                'phone' => ['sometimes', 'required', 'string', 'max:20', 'regex:/^\(\d{2}\)\s\d{5}-\d{4}$/'],
                 'resume' => 'sometimes|file|mimes:pdf|max:5120',
                 'bio' => 'nullable|string',
                 'skills' => 'nullable|array',
@@ -207,7 +207,7 @@ class CandidateController extends Controller
 
             $job = Job::findOrFail($validated['job_id']);
 
-            if ($job->status !== 'active') {
+            if ($job->status !== 'aberta') {
                 return response()->json([
                     'message' => 'Esta vaga não está aceitando candidaturas no momento'
                 ], 422);

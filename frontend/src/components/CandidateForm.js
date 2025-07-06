@@ -158,20 +158,56 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
           : prev.selectedJobs.filter(id => id !== jobId)
       }));
     } else if (name === 'phone') {
-      let phoneNumber = value.replace(/\D/g, '');
-      phoneNumber = phoneNumber.slice(0, 11);
+      // Preservar a posição do cursor
+      const input = e.target;
+      const selectionStart = input.selectionStart;
       
-      if (phoneNumber.length >= 2) {
-        phoneNumber = `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+      // Remover tudo que não é dígito
+      const digits = value.replace(/\D/g, '');
+      
+      // Limitar a 11 dígitos
+      const limitedDigits = digits.substring(0, 11);
+      
+      // Aplicar máscara
+      let formattedPhone = '';
+      
+      if (limitedDigits.length <= 2) {
+        formattedPhone = limitedDigits;
+      } else if (limitedDigits.length <= 7) {
+        formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2)}`;
+      } else {
+        formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2, 7)}-${limitedDigits.substring(7)}`;
       }
-      if (phoneNumber.length >= 10) {
-        phoneNumber = `${phoneNumber.slice(0, 10)}-${phoneNumber.slice(10)}`;
-      }
+      
+      // Calcular a nova posição do cursor
+      const digitsBefore = value.substring(0, selectionStart).replace(/\D/g, '').length;
       
       setFormData(prev => ({
         ...prev,
-        [name]: phoneNumber
+        [name]: formattedPhone
       }));
+      
+      // Definir um timeout para restaurar a posição do cursor após a renderização
+      setTimeout(() => {
+        if (input) {
+          let newCursorPosition = 0;
+          
+          // Calcular a nova posição do cursor com base nos dígitos antes do cursor
+          if (digitsBefore <= 2) {
+            newCursorPosition = digitsBefore;
+            if (digitsBefore === 2 && limitedDigits.length >= 2) newCursorPosition += 1; // Após o parêntese
+          } else if (digitsBefore <= 7) {
+            newCursorPosition = digitsBefore + 3; // (XX) + espaço
+          } else {
+            newCursorPosition = digitsBefore + 4; // (XX) + espaço + hífen
+          }
+          
+          // Garantir que a posição não ultrapasse o comprimento do texto
+          newCursorPosition = Math.min(newCursorPosition, formattedPhone.length);
+          
+          input.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
     } else {
       setFormData(prev => ({
         ...prev,
@@ -439,7 +475,12 @@ const CandidateForm = ({ candidate, onSuccess, onCancel }) => {
                   value={formData.phone}
                   onChange={handleChange}
                   error={!!validationErrors.phone}
-                  helperText={validationErrors.phone || '(00) 00000-0000'}
+                  helperText={validationErrors.phone || 'Formato: (00) 00000-0000'}
+                  placeholder="(00) 00000-0000"
+                  inputProps={{
+                    inputMode: 'tel',
+                    maxLength: 15
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

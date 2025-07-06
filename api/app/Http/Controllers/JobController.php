@@ -40,7 +40,7 @@ class JobController extends Controller
             $query->orderBy($sortField, $sortDirection);
 
             // Paginação
-            $perPage = $request->get('per_page', 10);
+            $perPage = $request->get('per_page', 20);
             $jobs = $query->paginate($perPage);
 
             return response()->json($jobs);

@@ -126,7 +126,7 @@ export const authService = {
 
   me: async () => {
     try {
-      const response = await sanctumApi.get('/api/user');
+      const response = await api.get('/api/user');
       return response.data;
     } catch (error) {
       throw error;

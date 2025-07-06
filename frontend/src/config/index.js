@@ -1,7 +1,7 @@
 const config = {
   // API
   apiUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
-  baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  baseUrl: process.env.REACT_APP_BASE_URL || 'http://localhost:8000',
   
   // Auth
   authTokenKey: 'auth_token',
@@ -14,8 +14,8 @@ const config = {
   company: 'SignoTech',
   
   // Pagination
-  defaultPerPage: 10,
-  perPageOptions: [5, 10, 25, 50],
+  defaultPerPage: 20,
+  perPageOptions: [5, 10, 20, 50],
   
   // File Upload
   maxFileSize: 5 * 1024 * 1024, // 5MB
