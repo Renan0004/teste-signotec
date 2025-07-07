@@ -86,11 +86,11 @@ npm start
 
 ### Acessando o Sistema
 
-- **Frontend**: http://localhost:3000 | http://localhost:3001
+- **Frontend**: http://localhost:3000
 - **API**: http://localhost:8000/api
 
 ### Usuário de Teste
-- **Email**: admin@example.com
+- **Email**: admin@exemplo.com
 - **Senha**: password
 
 ## Estrutura do Projeto

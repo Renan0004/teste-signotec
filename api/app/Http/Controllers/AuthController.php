@@ -11,9 +11,52 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
 
+/**
+ * @OA\Tag(
+ *     name="Autenticação",
+ *     description="API Endpoints para autenticação de usuários"
+ * )
+ * 
+ * @OA\Info(
+ *     version="1.0.0",
+ *     title="SignoTech API",
+ *     description="API para o sistema de gerenciamento de vagas e candidatos",
+ *     @OA\Contact(
+ *         email="contato@signotech.com"
+ *     )
+ * )
+ */
 class AuthController extends Controller
 {
-    // Register
+    /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Registrar um novo usuário",
+     *     tags={"Autenticação"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "email", "password", "password_confirmation"},
+     *             @OA\Property(property="name", type="string", example="Usuário Teste"),
+     *             @OA\Property(property="email", type="string", format="email", example="usuario@exemplo.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="Senha@123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Senha@123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Usuário registrado com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao registrar usuário"
+     *     )
+     * )
+     */
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -91,7 +134,42 @@ class AuthController extends Controller
         }
     }
 
-    // Login
+    /**
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Fazer login no sistema",
+     *     tags={"Autenticação"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "password"},
+     *             @OA\Property(property="email", type="string", format="email", example="admin@exemplo.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login realizado com sucesso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Login realizado com sucesso"),
+     *             @OA\Property(property="user", type="object"),
+     *             @OA\Property(property="token", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Credenciais inválidas"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao fazer login"
+     *     )
+     * )
+     */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -150,7 +228,22 @@ class AuthController extends Controller
         }
     }
 
-    // Logout
+    /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Fazer logout do sistema",
+     *     tags={"Autenticação"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logout realizado com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao fazer logout"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function logout(Request $request): JsonResponse
     {
         try {
@@ -173,7 +266,22 @@ class AuthController extends Controller
         }
     }
 
-    // User
+    /**
+     * @OA\Get(
+     *     path="/api/user",
+     *     summary="Obter dados do usuário autenticado",
+     *     tags={"Autenticação"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Dados do usuário"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao obter dados do usuário"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function user(Request $request): JsonResponse
     {
         try {

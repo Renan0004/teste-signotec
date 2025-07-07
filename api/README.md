@@ -58,5 +58,5 @@ Esta é a API backend do sistema de gerenciamento de vagas e candidatos desenvol
 
 Após executar o seeder, você pode usar as seguintes credenciais:
 
-- **Email**: admin@example.com
+- **Email**: admin@exemplo.com
 - **Senha**: password

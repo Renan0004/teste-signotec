@@ -61,7 +61,7 @@ REACT_APP_API_URL=http://localhost:8000/api
 npm start
 ```
 
-2. Acesse o sistema em: http://localhost:3000 ou http://localhost:3001
+2. Acesse o sistema em: http://localhost:3000
 
 ## Build para Produção
 
