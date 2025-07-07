@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -62,6 +63,7 @@ import {
 import api, { candidatesService } from '../services/api';
 
 const CandidateList = () => {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -327,171 +329,97 @@ const CandidateList = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        p: { xs: 2, sm: 3 },
-        backgroundColor: 'background.default',
-        minHeight: '100vh'
-      }}
-      className="fade-in"
-    >
-      {/* Header */}
-      <Box 
-        sx={{ 
+    <div className="fade-in" style={{ overflow: 'hidden', width: '100%' }}>
+      <Box sx={{ 
+        p: { xs: 2, sm: 3 }, 
+        overflow: 'hidden', 
+        width: '100%',
+        maxWidth: '100%'
+      }}>
+        <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'center',
+          alignItems: 'center', 
           mb: 4,
           flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2
-        }}
-      >
-        <Box>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              fontWeight: 600,
-              color: 'text.primary',
-              mb: 1
+          gap: { xs: 2, sm: 0 },
+          width: '100%'
+        }}>
+          <Typography variant="h4" component="h1" sx={{ mb: { xs: 0, sm: 0 } }}>
+            Candidatos
+          </Typography>
+          
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/dashboard/candidates/new')}
+            sx={{
+              minWidth: { xs: '100%', sm: 'auto' },
+              height: 48,
+              px: 3,
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+                transform: 'translateY(-1px)'
+              },
+              transition: 'all 0.2s'
             }}
           >
-            Lista de Candidatos
-          </Typography>
-          <Typography 
-            variant="body1" 
-            color="text.secondary"
-          >
-            Total: {totalCandidates} candidatos
-          </Typography>
+            Novo Candidato
+          </Button>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          sx={{
-            minWidth: { xs: '100%', sm: 'auto' },
-            height: 48,
-            px: 3,
-            backgroundColor: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-              transform: 'translateY(-1px)'
-            },
-            transition: 'all 0.2s'
-          }}
-        >
-          Novo Candidato
-        </Button>
-      </Box>
+        <Box sx={{ mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                placeholder="Pesquisar candidatos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                size={isMobile ? "small" : "medium"}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Ordenar por</InputLabel>
+                <Select
+                  value={sortBy}
+                  onChange={handleSortByChange}
+                  label="Ordenar por"
+                >
+                  <MenuItem value="name">Nome</MenuItem>
+                  <MenuItem value="email">E-mail</MenuItem>
+                  <MenuItem value="created_at">Data de Cadastro</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-      {/* Filters */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: { xs: 2, sm: 3 },
-          mb: 3,
-          borderRadius: 2,
-          backgroundColor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              fullWidth
-              placeholder="Buscar candidatos..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'background.default',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                  '&.Mui-focused': {
-                    backgroundColor: 'background.paper',
-                  }
-                }
-              }}
-            />
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Direção</InputLabel>
+                <Select
+                  value={sortDirection}
+                  onChange={handleSortDirectionChange}
+                  label="Direção"
+                >
+                  <MenuItem value="asc">Crescente</MenuItem>
+                  <MenuItem value="desc">Decrescente</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
-          
-          <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Ordenar por</InputLabel>
-              <Select
-                value={sortBy}
-                onChange={handleSortByChange}
-                label="Ordenar por"
-              >
-                <MenuItem value="name">Nome</MenuItem>
-                <MenuItem value="email">E-mail</MenuItem>
-                <MenuItem value="created_at">Data de Cadastro</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+        </Box>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Direção</InputLabel>
-              <Select
-                value={sortDirection}
-                onChange={handleSortDirectionChange}
-                label="Direção"
-              >
-                <MenuItem value="asc">Crescente</MenuItem>
-                <MenuItem value="desc">Decrescente</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Error Message */}
-      {error && (
-        <Alert 
-          severity="error" 
-          sx={{ 
-            mb: 3,
-            borderRadius: 2
-          }}
-        >
-          {error}
-        </Alert>
-      )}
-
-      {/* Content */}
-      {candidates.length === 0 ? (
-        <Paper
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            borderRadius: 2,
-            backgroundColor: 'background.paper',
-            border: '1px dashed',
-            borderColor: 'divider'
-          }}
-        >
-          <Typography variant="h6" gutterBottom color="text.secondary">
-            Nenhum candidato encontrado
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Tente ajustar os filtros ou adicione um novo candidato
-          </Typography>
-        </Paper>
-      ) : (
-        <>
-          {isMobile ? (
+        {isMobile ? (
+          <Box sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
             <Grid container spacing={2}>
               {candidates.map((candidate) => (
                 <Grid item xs={12} key={`candidate-${candidate.id}`}>
@@ -557,16 +485,32 @@ const CandidateList = () => {
                 </Grid>
               ))}
             </Grid>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
+          </Box>
+        ) : (
+          <Box sx={{ width: '100%', overflow: 'hidden' }}>
+            <TableContainer 
+              component={Paper} 
+              sx={{ 
+                mb: 2, 
+                maxWidth: '100%', 
+                overflow: 'auto',
+                '&::-webkit-scrollbar': {
+                  height: '8px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  borderRadius: '4px',
+                }
+              }}
+            >
+              <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Nome</TableCell>
-                    <TableCell>E-mail</TableCell>
+                    <TableCell>Email</TableCell>
                     <TableCell>Telefone</TableCell>
-                    <TableCell>Vagas</TableCell>
-                    <TableCell>Ações</TableCell>
+                    <TableCell>Vagas de Interesse</TableCell>
+                    <TableCell align="right">Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -589,30 +533,18 @@ const CandidateList = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-          )}
-        </>
-      )}
+          </Box>
+        )}
 
-      {/* Pagination */}
-      <Box
-        sx={{
-          mt: 3,
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <Pagination
-          count={totalPages}
-          page={page + 1}
-          onChange={handlePageChange}
-          color="primary"
-          size={isMobile ? "small" : "medium"}
-          sx={{
-            '& .MuiPaginationItem-root': {
-              borderRadius: 1
-            }
-          }}
-        />
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Pagination
+            count={totalPages}
+            page={page + 1}
+            onChange={handlePageChange}
+            color="primary"
+            size={isMobile ? "small" : "medium"}
+          />
+        </Box>
       </Box>
 
       {/* Modal */}
@@ -791,7 +723,7 @@ const CandidateList = () => {
           </>
         )}
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

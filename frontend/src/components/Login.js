@@ -8,9 +8,16 @@ import {
     InputAdornment,
     IconButton,
     Link,
-    Alert
+    Alert,
+    Paper,
+    Divider
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { 
+    Visibility, 
+    VisibilityOff, 
+    Email as EmailIcon,
+    Lock as LockIcon 
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
@@ -60,93 +67,115 @@ const Login = () => {
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-            <Box sx={{ mb: 3, textAlign: 'center' }}>
-                <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
-                    Sistema de Gerenciamento de Vagas
-                            </Typography>
-                        </Box>
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', maxWidth: 450, mx: 'auto' }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: '1px solid #e0e0e0' }}>
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
+                    <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
+                        Sistema de Gerenciamento de Vagas
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Entre com suas credenciais para acessar o sistema
+                    </Typography>
+                </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
 
-                                    <TextField
-                fullWidth
-                                        label="E-mail"
-                                        type="email"
-                value={email}
-                onChange={handleEmailChange}
-                margin="normal"
-                required
-                autoComplete="email"
-                                        autoFocus
-                error={!!error}
-                sx={{ mb: 2 }}
-            />
+                <TextField
+                    fullWidth
+                    label="E-mail"
+                    type="email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    margin="normal"
+                    required
+                    autoComplete="email"
+                    autoFocus
+                    error={!!error}
+                    sx={{ mb: 2 }}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <EmailIcon color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
 
-                                    <TextField
-                fullWidth
-                                        label="Senha"
-                                        type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={handlePasswordChange}
-                margin="normal"
-                required
-                autoComplete="current-password"
-                error={!!error}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                aria-label="toggle password visibility"
-                                                        onClick={handleClickShowPassword}
-                                                        edge="end"
-                                                    >
-                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                    ),
-                                        }}
-                sx={{ mb: 3 }}
-                                    />
-
-                                <Button
-                                    type="submit"
-                fullWidth
-                                    variant="contained"
-                                    disabled={isSubmitting}
-                sx={{
-                    py: 1.5,
-                    mb: 2,
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    textTransform: 'none',
-                    borderRadius: 2,
-                    boxShadow: 'none',
-                    '&:hover': {
-                        boxShadow: 'none',
-                    },
-                }}
+                <TextField
+                    fullWidth
+                    label="Senha"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={handlePasswordChange}
+                    margin="normal"
+                    required
+                    autoComplete="current-password"
+                    error={!!error}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <LockIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={handleClickShowPassword}
+                                    edge="end"
                                 >
-                {isSubmitting ? 'Entrando...' : 'Entrar'}
-                                </Button>
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ mb: 3 }}
+                />
 
-            <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                            Não tem uma conta?{' '}
-                    <Link
-                        component={RouterLink}
-                        to="/auth/register"
-                        color="primary"
-                        sx={{ fontWeight: 600, textDecoration: 'none' }}
-                    >
-                        Cadastre-se
-                            </Link>
-                        </Typography>
-            </Box>
+                <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isSubmitting}
+                    sx={{
+                        py: 1.2,
+                        mb: 2,
+                        fontWeight: 600,
+                        fontSize: '0.95rem',
+                        textTransform: 'none',
+                        borderRadius: 1,
+                        boxShadow: 'none',
+                        '&:hover': {
+                            boxShadow: 'none',
+                            backgroundColor: 'primary.dark',
+                        },
+                    }}
+                >
+                    {isSubmitting ? 'Entrando...' : 'Entrar'}
+                </Button>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        Não tem uma conta?{' '}
+                        <Link
+                            component={RouterLink}
+                            to="/auth/register"
+                            color="primary"
+                            sx={{ fontWeight: 600, textDecoration: 'none' }}
+                        >
+                            Cadastre-se
+                        </Link>
+                    </Typography>
+                </Box>
+            </Paper>
         </Box>
     );
 };

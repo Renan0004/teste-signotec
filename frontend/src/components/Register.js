@@ -8,9 +8,17 @@ import {
     InputAdornment,
     IconButton,
     Link,
-    Alert
+    Alert,
+    Paper,
+    Divider
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { 
+    Visibility, 
+    VisibilityOff,
+    Email as EmailIcon,
+    Lock as LockIcon,
+    Person as PersonIcon
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
@@ -111,132 +119,168 @@ const Register = () => {
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-            <Box sx={{ mb: 3, textAlign: 'center' }}>
-                <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
-                    Crie sua conta no Sistema de Vagas
-                </Typography>
-            </Box>
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', maxWidth: 450, mx: 'auto' }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: '1px solid #e0e0e0' }}>
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
+                    <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
+                        Crie sua conta no Sistema
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Preencha os dados abaixo para criar sua conta
+                    </Typography>
+                </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
 
-            <TextField
-                fullWidth
-                label="Nome completo"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                margin="normal"
-                required
-                autoFocus
-                error={!!error}
-                sx={{ mb: 2 }}
-            />
+                <TextField
+                    fullWidth
+                    label="Nome completo"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    margin="normal"
+                    required
+                    autoFocus
+                    error={!!error}
+                    sx={{ mb: 2 }}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <PersonIcon color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
 
-            <TextField
-                fullWidth
-                label="E-mail"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                margin="normal"
-                required
-                error={!!error}
-                sx={{ mb: 2 }}
-            />
+                <TextField
+                    fullWidth
+                    label="E-mail"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    margin="normal"
+                    required
+                    error={!!error}
+                    sx={{ mb: 2 }}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <EmailIcon color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
 
-            <TextField
-                fullWidth
-                label="Senha"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleChange}
-                margin="normal"
-                required
-                error={!!error}
-                helperText="A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos."
-                InputProps={{
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={() => setShowPassword(!showPassword)}
-                                edge="end"
-                            >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
-                    ),
-                }}
-                sx={{ mb: 2 }}
-            />
+                <TextField
+                    fullWidth
+                    label="Senha"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    margin="normal"
+                    required
+                    error={!!error}
+                    helperText="A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos."
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <LockIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    edge="end"
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ mb: 2 }}
+                />
 
-            <TextField
-                fullWidth
-                label="Confirmar senha"
-                name="password_confirmation"
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.password_confirmation}
-                onChange={handleChange}
-                margin="normal"
-                required
-                error={!!error}
-                InputProps={{
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                edge="end"
-                            >
-                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
-                    ),
-                }}
-                sx={{ mb: 3 }}
-            />
+                <TextField
+                    fullWidth
+                    label="Confirmar senha"
+                    name="password_confirmation"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.password_confirmation}
+                    onChange={handleChange}
+                    margin="normal"
+                    required
+                    error={!!error}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <LockIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    edge="end"
+                                >
+                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ mb: 3 }}
+                />
 
-            <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={isSubmitting}
-                sx={{
-                    py: 1.5,
-                    mb: 2,
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    textTransform: 'none',
-                    borderRadius: 2,
-                    boxShadow: 'none',
-                    '&:hover': {
+                <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isSubmitting}
+                    sx={{
+                        py: 1.2,
+                        mb: 2,
+                        fontWeight: 600,
+                        fontSize: '0.95rem',
+                        textTransform: 'none',
+                        borderRadius: 1,
                         boxShadow: 'none',
-                    },
-                }}
-            >
-                {isSubmitting ? 'Criando conta...' : 'Criar conta'}
-            </Button>
+                        '&:hover': {
+                            boxShadow: 'none',
+                            backgroundColor: 'primary.dark',
+                        },
+                    }}
+                >
+                    {isSubmitting ? 'Criando conta...' : 'Criar conta'}
+                </Button>
 
-            <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                    Já tem uma conta?{' '}
-                    <Link
-                        component={RouterLink}
-                        to="/auth/login"
-                        color="primary"
-                        sx={{ fontWeight: 600, textDecoration: 'none' }}
-                    >
-                        Faça login
-                    </Link>
-                </Typography>
-            </Box>
+                <Divider sx={{ my: 2 }} />
+
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        Já tem uma conta?{' '}
+                        <Link
+                            component={RouterLink}
+                            to="/auth/login"
+                            color="primary"
+                            sx={{ fontWeight: 600, textDecoration: 'none' }}
+                        >
+                            Faça login
+                        </Link>
+                    </Typography>
+                </Box>
+            </Paper>
         </Box>
     );
 };

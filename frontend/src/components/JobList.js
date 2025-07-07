@@ -334,22 +334,12 @@ const JobList = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={12} md={4} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
-            Nova Vaga
-          </Button>
-        </Grid>
       </Grid>
     </Box>
   );
 
   const renderMobileView = () => (
-    <Box sx={{ width: '100%', mb: 2 }}>
+    <Box sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
       <Grid container spacing={2}>
         {jobs.map((job) => (
           <Grid item xs={12} key={job.id}>
@@ -439,107 +429,157 @@ const JobList = () => {
   );
 
   const renderDesktopView = () => (
-    <TableContainer component={Paper} sx={{ mb: 2 }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell padding="checkbox">
-              <Checkbox
-                indeterminate={selectedJobs.length > 0 && selectedJobs.length < jobs.length}
-                checked={jobs.length > 0 && selectedJobs.length === jobs.length}
-                onChange={handleSelectAll}
-              />
-            </TableCell>
-            <TableCell>
-              <TableSortLabel
-                active={sortBy === 'title'}
-                direction={sortDirection}
-                onClick={() => handleSort('title')}
-              >
-                Título
-              </TableSortLabel>
-            </TableCell>
-            <TableCell>Empresa</TableCell>
-            <TableCell>Local</TableCell>
-            <TableCell>
-              <TableSortLabel
-                active={sortBy === 'salary'}
-                direction={sortDirection}
-                onClick={() => handleSort('salary')}
-              >
-                Salário
-              </TableSortLabel>
-            </TableCell>
-            <TableCell>Tipo</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align="right">Ações</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {jobs.map((job) => (
-            <TableRow
-              hover
-              key={job.id}
-              selected={selectedJobs.includes(job.id)}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
+    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          mb: 2, 
+          maxWidth: '100%', 
+          overflow: 'auto',
+          '&::-webkit-scrollbar': {
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(0,0,0,0.2)',
+            borderRadius: '4px',
+          }
+        }}
+      >
+        <Table sx={{ minWidth: 650 }}>
+          <TableHead>
+            <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={selectedJobs.includes(job.id)}
-                  onChange={() => handleSelectJob(job.id)}
+                  indeterminate={selectedJobs.length > 0 && selectedJobs.length < jobs.length}
+                  checked={jobs.length > 0 && selectedJobs.length === jobs.length}
+                  onChange={handleSelectAll}
                 />
               </TableCell>
-              <TableCell component="th" scope="row">
-                <Typography variant="subtitle2">{job.title}</Typography>
-              </TableCell>
-              <TableCell>{job.company}</TableCell>
-              <TableCell>{job.location}</TableCell>
-              <TableCell>R$ {job.salary.toLocaleString()}</TableCell>
               <TableCell>
-                <Chip label={job.type === 'full_time' ? 'Tempo Integral' : 
-                           job.type === 'part_time' ? 'Meio Período' : 
-                           job.type === 'contract' ? 'Contrato' : 
-                           job.type === 'temporary' ? 'Temporário' : 'Estágio'}
-                    size="small"
-                    variant="outlined"
-                  />
+                <TableSortLabel
+                  active={sortBy === 'title'}
+                  direction={sortDirection}
+                  onClick={() => handleSort('title')}
+                >
+                  Título
+                </TableSortLabel>
               </TableCell>
+              <TableCell>Empresa</TableCell>
+              <TableCell>Local</TableCell>
               <TableCell>
-                <Chip
-                  label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
-                  color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
-                  size="small"
-                />
+                <TableSortLabel
+                  active={sortBy === 'salary'}
+                  direction={sortDirection}
+                  onClick={() => handleSort('salary')}
+                >
+                  Salário
+                </TableSortLabel>
               </TableCell>
-              <TableCell align="right">
-                <Tooltip title="Editar">
-                  <IconButton size="small" onClick={() => handleEdit(job)}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Excluir">
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleDelete([job.id])}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
+              <TableCell>Tipo</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Ações</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {jobs.map((job) => (
+              <TableRow
+                hover
+                key={job.id}
+                selected={selectedJobs.includes(job.id)}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              >
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={selectedJobs.includes(job.id)}
+                    onChange={() => handleSelectJob(job.id)}
+                  />
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  <Typography variant="subtitle2">{job.title}</Typography>
+                </TableCell>
+                <TableCell>{job.company}</TableCell>
+                <TableCell>{job.location}</TableCell>
+                <TableCell>R$ {job.salary.toLocaleString()}</TableCell>
+                <TableCell>
+                  <Chip label={job.type === 'full_time' ? 'Tempo Integral' : 
+                             job.type === 'part_time' ? 'Meio Período' : 
+                             job.type === 'contract' ? 'Contrato' : 
+                             job.type === 'temporary' ? 'Temporário' : 'Estágio'}
+                      size="small"
+                      variant="outlined"
+                    />
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
+                    color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <Tooltip title="Editar">
+                    <IconButton size="small" onClick={() => handleEdit(job)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Excluir">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDelete([job.id])}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 
   return (
-    <div className="fade-in">
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
-          Vagas
-        </Typography>
+    <div className="fade-in" style={{ overflow: 'hidden', width: '100%' }}>
+      <Box sx={{ 
+        p: { xs: 2, sm: 3 }, 
+        overflow: 'hidden', 
+        width: '100%',
+        maxWidth: '100%'
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 },
+          width: '100%'
+        }}>
+          <Typography variant="h4" component="h1" sx={{ mb: { xs: 0, sm: 0 } }}>
+            Vagas
+          </Typography>
+          
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAdd}
+            sx={{
+              minWidth: { xs: '100%', sm: 'auto' },
+              height: 48,
+              px: 3,
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+                transform: 'translateY(-1px)'
+              },
+              transition: 'all 0.2s'
+            }}
+          >
+            Nova Vaga
+          </Button>
+        </Box>
 
         {renderFilters()}
 

@@ -14,7 +14,14 @@ import {
   CircularProgress,
   FormHelperText,
   IconButton,
-  InputAdornment
+  InputAdornment,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider,
+  Paper,
+  Checkbox,
+  ListItemText
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -24,6 +31,8 @@ import {
   LinkedIn as LinkedInIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  ExpandMore as ExpandMoreIcon,
+  Work as WorkIcon
 } from '@mui/icons-material';
 import api from '../services/api';
 import { useSnackbar } from 'notistack';
@@ -45,6 +54,7 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
   const [jobs, setJobs] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
+  const [expandedExperience, setExpandedExperience] = useState(0);
 
   // Efeito para inicializar o formulário
   useEffect(() => {
@@ -222,6 +232,9 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
       ...formData,
       experiences: newExperiences
     });
+    
+    // Expande a nova experiência adicionada
+    setExpandedExperience(newExperiences.length - 1);
   };
 
   const removeExperience = (index) => {
@@ -241,6 +254,11 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
       ...formData,
       experiences: newExperiences
     });
+    
+    // Ajusta o índice expandido se necessário
+    if (expandedExperience >= newExperiences.length) {
+      setExpandedExperience(newExperiences.length - 1);
+    }
   };
 
   const handleJobsChange = (event) => {
@@ -337,161 +355,235 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
     }
   };
 
+  // Função para alternar o estado de expansão de uma experiência
+  const handleExperienceAccordionChange = (index) => (event, isExpanded) => {
+    setExpandedExperience(isExpanded ? index : -1);
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <TextField
-            required
-            fullWidth
-            label="Nome"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+      <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+          Informações Pessoais
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              required
+              fullWidth
+              label="Nome"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              error={!!errors.name}
+              helperText={errors.name}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              required
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={!!errors.email}
+              helperText={errors.email}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              required
+              fullWidth
+              label="Telefone"
+              value={formData.phone}
+              onChange={handlePhoneChange}
+              error={!!errors.phone}
+              helperText={errors.phone || 'Formato: (00) 00000-0000'}
+              placeholder="(00) 00000-0000"
+              inputProps={{
+                inputMode: 'tel',
+                maxLength: 15,
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="LinkedIn"
+              name="linkedin"
+              value={formData.linkedin}
+              onChange={handleChange}
+              error={!!errors.linkedin}
+              helperText={errors.linkedin}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LinkedInIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Descrição"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              error={!!errors.description}
+              helperText={errors.description}
+              multiline
+              rows={2}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <DescriptionIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+            />
+          </Grid>
         </Grid>
+      </Paper>
+      
+      <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+        <Typography variant="subtitle1" fontWeight="medium" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+          <WorkIcon sx={{ mr: 1, fontSize: '1.2rem' }} />
+          Vagas de Interesse
+        </Typography>
         
-        <Grid item xs={12} md={6}>
-          <TextField
-            required
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon color="action" />
-                </InputAdornment>
-              ),
+        <FormControl fullWidth error={!!errors.job_ids} size="small">
+          <InputLabel id="jobs-label">Selecione as vagas</InputLabel>
+          <Select
+            labelId="jobs-label"
+            id="jobs-select"
+            multiple
+            value={selectedJobs}
+            onChange={handleJobsChange}
+            input={<OutlinedInput label="Selecione as vagas" />}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((jobId) => {
+                  const job = jobs.find(j => j.id === jobId);
+                  return job ? (
+                    <Chip 
+                      key={`chip-${jobId}`} 
+                      label={job.title} 
+                      size="small"
+                      sx={{ 
+                        backgroundColor: 'primary.light', 
+                        color: 'primary.contrastText',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'primary.contrastText',
+                        }
+                      }}
+                    />
+                  ) : null;
+                })}
+              </Box>
+            )}
+            MenuProps={{
+              PaperProps: {
+                style: {
+                  maxHeight: 250,
+                },
+              },
             }}
-          />
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <TextField
-            required
-            fullWidth
-            label="Telefone"
-            value={formData.phone}
-            onChange={handlePhoneChange}
-            error={!!errors.phone}
-            helperText={errors.phone || 'Formato: (00) 00000-0000'}
-            placeholder="(00) 00000-0000"
-            inputProps={{
-              inputMode: 'tel',
-              maxLength: 15,
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PhoneIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="LinkedIn"
-            name="linkedin"
-            value={formData.linkedin}
-            onChange={handleChange}
-            error={!!errors.linkedin}
-            helperText={errors.linkedin}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LinkedInIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Descrição"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            error={!!errors.description}
-            helperText={errors.description}
-            multiline
-            rows={4}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DescriptionIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <FormControl fullWidth error={!!errors.job_ids}>
-            <InputLabel id="jobs-label">Vagas de Interesse</InputLabel>
-            <Select
-              labelId="jobs-label"
-              id="jobs-select"
-              multiple
-              value={selectedJobs}
-              onChange={handleJobsChange}
-              input={<OutlinedInput label="Vagas de Interesse" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((jobId) => {
-                    const job = jobs.find(j => j.id === jobId);
-                    return job ? (
-                      <Chip key={`chip-${jobId}`} label={job.title} />
-                    ) : null;
-                  })}
-                </Box>
-              )}
-            >
-              {jobs.map((job) => (
-                <MenuItem key={`job-${job.id}`} value={job.id}>
-                  {job.title}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.job_ids && <FormHelperText>{errors.job_ids}</FormHelperText>}
-          </FormControl>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
+          >
+            {jobs.map((job) => (
+              <MenuItem key={`job-${job.id}`} value={job.id}>
+                <Checkbox checked={selectedJobs.indexOf(job.id) > -1} />
+                <ListItemText primary={job.title} />
+              </MenuItem>
+            ))}
+          </Select>
+          {errors.job_ids && <FormHelperText>{errors.job_ids}</FormHelperText>}
+        </FormControl>
+      </Paper>
+      
+      <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="subtitle1" fontWeight="medium">
             Experiências
           </Typography>
           
-          {formData.experiences.map((experience, index) => (
-            <Box 
-              key={`experience-${index}`}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={addExperience}
+            variant="outlined"
+            color="primary"
+            size="small"
+            type="button"
+          >
+            Adicionar
+          </Button>
+        </Box>
+        
+        {formData.experiences.map((experience, index) => (
+          <Accordion 
+            key={`experience-${index}`}
+            expanded={expandedExperience === index}
+            onChange={handleExperienceAccordionChange(index)}
+            sx={{ 
+              mb: 1,
+              '&:before': {
+                display: 'none',
+              },
+              boxShadow: 'none',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
               sx={{ 
-                mb: 3, 
-                p: 2, 
-                border: '1px solid #e0e0e0', 
-                borderRadius: 1,
-                position: 'relative'
+                backgroundColor: 'background.default',
+                '&.Mui-expanded': {
+                  minHeight: '48px',
+                },
               }}
             >
+              <Typography>
+                {experience.company || experience.position 
+                  ? `${experience.company || ''} ${experience.position ? `- ${experience.position}` : ''}`
+                  : `Experiência ${index + 1}`
+                }
+              </Typography>
+            </AccordionSummary>
+            
+            <AccordionDetails sx={{ p: 2, pt: 0 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -502,6 +594,7 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
                     error={!!errors[`experiences.${index}.company`]}
                     helperText={errors[`experiences.${index}.company`]}
+                    size="small"
                   />
                 </Grid>
                 
@@ -514,10 +607,11 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
                     error={!!errors[`experiences.${index}.position`]}
                     helperText={errors[`experiences.${index}.position`]}
+                    size="small"
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     required
                     fullWidth
@@ -527,6 +621,7 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     error={!!errors[`experiences.${index}.period`]}
                     helperText={errors[`experiences.${index}.period`] || 'Ex: 01/2020'}
                     placeholder="MM/AAAA"
+                    size="small"
                   />
                 </Grid>
                 
@@ -537,57 +632,49 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     value={experience.description || ''}
                     onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
                     multiline
-                    rows={3}
+                    rows={2}
+                    size="small"
                   />
                 </Grid>
               </Grid>
               
               {formData.experiences.length > 1 && (
-                <IconButton
-                  color="error"
-                  onClick={() => removeExperience(index)}
-                  sx={{ position: 'absolute', top: 8, right: 8 }}
-                  size="small"
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <Button
+                    color="error"
+                    onClick={() => removeExperience(index)}
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                  >
+                    Remover
+                  </Button>
+                </Box>
               )}
-            </Box>
-          ))}
-          
-          <Button
-            startIcon={<AddIcon />}
-            onClick={addExperience}
-            variant="outlined"
-            color="primary"
-            sx={{ mt: 1 }}
-            type="button"
-          >
-            Adicionar Experiência
-          </Button>
-        </Grid>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Paper>
+      
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+        <Button
+          variant="outlined"
+          onClick={onCancel}
+          disabled={loading}
+          type="button"
+        >
+          Cancelar
+        </Button>
         
-        <Grid item xs={12} sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
-          <Button
-            variant="outlined"
-            onClick={onCancel}
-            disabled={loading}
-            type="button"
-          >
-            Cancelar
-          </Button>
-          
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            {initialData ? 'Atualizar' : 'Cadastrar'}
-          </Button>
-        </Grid>
-      </Grid>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} /> : null}
+        >
+          {initialData ? 'Atualizar' : 'Cadastrar'}
+        </Button>
+      </Box>
     </Box>
   );
 };

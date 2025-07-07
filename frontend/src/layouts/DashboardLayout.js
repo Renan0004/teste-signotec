@@ -76,7 +76,12 @@ const DashboardLayout = () => {
     };
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            minHeight: '100vh', 
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            overflow: 'hidden' // Impede rolagem horizontal
+        }}>
             <AppBar 
                 position="fixed" 
                 color="inherit"
@@ -235,17 +240,26 @@ const DashboardLayout = () => {
                 transition: theme.transitions.create(['margin', 'width'], {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.leavingScreen,
-                })
+                }),
+                height: '100vh', // Altura fixa para o conteúdo principal
+                overflow: 'auto', // Permite rolagem vertical apenas neste container
+                overflowX: 'hidden' // Impede rolagem horizontal
             }}>
                 <Toolbar />
-                <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 2 } }}>
+                <Container maxWidth="lg" sx={{ 
+                    py: { xs: 1, sm: 2 },
+                    height: 'calc(100% - 64px)', // Ajusta para a altura da toolbar
+                    overflow: 'visible' // Permite que o conteúdo seja visível
+                }}>
                     <Paper 
                         sx={{ 
                             p: { xs: 1.5, sm: 3 }, 
                             borderRadius: 3, 
                             boxShadow: '0 2px 8px 0 rgba(33,150,243,0.07)', 
                             background: 'rgba(255,255,255,0.97)',
-                            minHeight: 'calc(100vh - 200px)'
+                            minHeight: 'calc(100vh - 200px)',
+                            overflow: 'auto', // Permite rolagem dentro do Paper se necessário
+                            overflowX: 'hidden' // Impede rolagem horizontal
                         }}
                     >
                         <Outlet />
