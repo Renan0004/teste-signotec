@@ -352,7 +352,7 @@ const CandidateList = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/dashboard/candidates/new')}
+            onClick={handleAdd}
             sx={{
               minWidth: { xs: '100%', sm: 'auto' },
               height: 48,
