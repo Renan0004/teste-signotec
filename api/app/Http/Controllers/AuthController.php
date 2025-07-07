@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    // Register
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -49,6 +50,7 @@ class AuthController extends Controller
             'password_confirmation.required' => 'A confirmação de senha é obrigatória'
         ]);
 
+        // Retorna os erros de validação
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Erro de validação',
@@ -56,6 +58,7 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Tenta criar o usuário
         try {
             \Log::info('Dados recebidos:', $request->all());
             
@@ -69,6 +72,7 @@ class AuthController extends Controller
 
             \Log::info('Usuário criado:', $user->toArray());
 
+        // Retorna o usuário criado
         return response()->json([
                 'message' => 'Usuário registrado com sucesso',
                 'user' => [
@@ -87,6 +91,7 @@ class AuthController extends Controller
         }
     }
 
+    // Login
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -100,6 +105,7 @@ class AuthController extends Controller
             'password.string' => 'A senha deve ser um texto'
         ]);
 
+        // Retorna os erros de validação
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Erro de validação',
@@ -107,6 +113,7 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Tenta fazer o login
         try {
             // Tenta encontrar o usuário primeiro
             $user = User::where('email', $request->email)->first();
@@ -143,6 +150,7 @@ class AuthController extends Controller
         }
     }
 
+    // Logout
     public function logout(Request $request): JsonResponse
     {
         try {
@@ -158,6 +166,7 @@ class AuthController extends Controller
         }
     }
 
+    // User
     public function user(Request $request): JsonResponse
     {
         try {

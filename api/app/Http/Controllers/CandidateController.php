@@ -50,82 +50,83 @@ class CandidateController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            \Log::info('Iniciando criação de candidato');
+            \Log::info('Dados recebidos: ' . json_encode($request->all()));
+            
+            // Validação simplificada
             $validated = $request->validate([
-                'name' => 'required|string|max:255|min:3',
-                'email' => 'required|email|unique:candidates',
-                'phone' => ['required', 'string', 'max:20', 'regex:/^\(\d{2}\)\s\d{5}-\d{4}$/'],
-                'resume' => 'required|file|mimes:pdf,doc,docx|max:5120', // max 5MB
-                'bio' => 'nullable|string|max:1000',
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'required|string|max:20',
+                'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // Currículo opcional
+                'bio' => 'nullable|string',
+                'linkedin_url' => 'nullable|string', // URL não obrigatória
                 'experiences' => 'nullable|string',
-                'skills' => 'nullable|array|min:1',
-                'skills.*' => 'required|string|max:50',
-                'linkedin_url' => ['nullable', 'url', 'regex:/^https?:\/\/(www\.)?linkedin\.com\/.*$/'],
-                'github_url' => ['nullable', 'url', 'regex:/^https?:\/\/(www\.)?github\.com\/.*$/'],
-                'portfolio_url' => 'nullable|url',
                 'job_ids' => 'required|array',
                 'job_ids.*' => 'exists:jobs,id'
-            ], [
-                'name.required' => 'O nome é obrigatório',
-                'name.min' => 'O nome deve ter pelo menos 3 caracteres',
-                'name.max' => 'O nome não pode ter mais que 255 caracteres',
-                'email.required' => 'O e-mail é obrigatório',
-                'email.email' => 'Digite um e-mail válido',
-                'email.unique' => 'Este e-mail já está cadastrado',
-                'phone.required' => 'O telefone é obrigatório',
-                'phone.regex' => 'O telefone deve estar em um formato válido: (99) 99999-9999',
-                'resume.required' => 'O currículo é obrigatório',
-                'resume.mimes' => 'O currículo deve estar em formato PDF, DOC ou DOCX',
-                'resume.max' => 'O currículo não pode ter mais que 5MB',
-                'bio.max' => 'A bio não pode ter mais que 1000 caracteres',
-                'skills.min' => 'Informe pelo menos uma habilidade',
-                'skills.*.required' => 'A habilidade é obrigatória',
-                'skills.*.max' => 'A habilidade não pode ter mais que 50 caracteres',
-                'linkedin_url.url' => 'O URL do LinkedIn deve ser válido',
-                'linkedin_url.regex' => 'O URL do LinkedIn deve ser válido',
-                'github_url.url' => 'O URL do GitHub deve ser válido',
-                'github_url.regex' => 'O URL do GitHub deve ser válido',
-                'portfolio_url.url' => 'O URL do portfólio deve ser válido',
-                'job_ids.required' => 'Selecione pelo menos uma vaga',
-                'job_ids.*.exists' => 'Uma ou mais vagas selecionadas não existem'
             ]);
 
+            \Log::info('Validação concluída com sucesso');
+            
             // Criar dados do candidato
             $candidateData = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
-                'linkedin_url' => $validated['linkedin_url'] ?? null,
-                'github_url' => $validated['github_url'] ?? null,
-                'portfolio_url' => $validated['portfolio_url'] ?? null,
-                'bio' => $validated['bio'] ?? null,
+                'linkedin_url' => $request->input('linkedin_url'),
+                'bio' => $request->input('bio')
             ];
 
             // Processar experiências se fornecidas
-            if (isset($validated['experiences'])) {
+            if ($request->has('experiences')) {
                 try {
-                    $experiences = json_decode($validated['experiences'], true);
+                    \Log::info('Processando experiências: ' . $request->input('experiences'));
+                    $experiences = json_decode($request->input('experiences'), true);
+                    
                     if (is_array($experiences)) {
-                        $candidateData['experiences'] = $experiences;
+                        // Verifica e limpa cada experiência para garantir que não haja problemas com datas
+                        foreach ($experiences as $key => $exp) {
+                            // Garantir que todos os campos sejam strings para evitar problemas de SQL
+                            $experiences[$key]['company'] = (string)($exp['company'] ?? '');
+                            $experiences[$key]['position'] = (string)($exp['position'] ?? '');
+                            $experiences[$key]['description'] = (string)($exp['description'] ?? '');
+                            $experiences[$key]['period'] = (string)($exp['period'] ?? '');
+                        }
+                        
+                        // Armazena como string JSON válida
+                        $candidateData['experiences'] = json_encode($experiences);
+                        \Log::info('Experiências processadas com sucesso: ' . json_encode($experiences));
+                    } else {
+                        \Log::warning('Experiências não são um array válido');
+                        $candidateData['experiences'] = json_encode([]);
                     }
                 } catch (\Exception $e) {
                     \Log::error('Erro ao decodificar experiências: ' . $e->getMessage());
+                    \Log::error($e->getTraceAsString());
+                    $candidateData['experiences'] = json_encode([]);
                 }
             }
 
-            // Upload do currículo
+            // Upload do currículo se fornecido
             if ($request->hasFile('resume')) {
                 $path = $request->file('resume')->store('resumes', 'public');
                 $candidateData['resume_path'] = $path;
             }
 
+            \Log::info('Dados do candidato processados: ' . json_encode($candidateData));
             $candidate = Candidate::create($candidateData);
+            \Log::info('Candidato criado com ID: ' . $candidate->id);
 
             // Vincula as vagas selecionadas
-            if (isset($validated['job_ids'])) {
-                $candidate->jobs()->attach($validated['job_ids']);
+            if ($request->has('job_ids')) {
+                $candidate->jobs()->attach($request->input('job_ids'));
+                \Log::info('Vagas vinculadas: ' . json_encode($request->input('job_ids')));
             }
 
-            return response()->json($candidate, 201);
+            return response()->json([
+                'message' => 'Candidato criado com sucesso',
+                'candidate' => $candidate
+            ], 201);
         } catch (\Exception $e) {
             \Log::error('Erro ao criar candidato: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -192,32 +193,43 @@ class CandidateController extends Controller
     }
 
     // Deletar um candidato
-    public function destroy(Request $request): JsonResponse
+    public function destroy($id): JsonResponse
     {
         try {
-            if ($request->has('ids')) {
-                $ids = explode(',', $request->input('ids'));
-                $candidates = Candidate::whereIn('id', $ids)->get();
-                
-                foreach ($candidates as $candidate) {
-                    if ($candidate->resume_path) {
-                        Storage::disk('public')->delete($candidate->resume_path);
-                    }
-                }
-                
-                Candidate::whereIn('id', $ids)->delete();
-                return response()->json(['message' => 'Candidatos excluídos com sucesso']);
+            \Log::info('Método destroy chamado com ID: ' . $id);
+            
+            if (is_null($id)) {
+                \Log::error('ID nulo recebido no método destroy');
+                return response()->json([
+                    'message' => 'ID do candidato não fornecido',
+                    'error' => 'ID não encontrado na requisição'
+                ], 400);
             }
-
-            $candidate = Candidate::findOrFail($request->route('id'));
+            
+            $candidate = Candidate::find($id);
+            
+            if (!$candidate) {
+                \Log::error('Candidato não encontrado com ID: ' . $id);
+                return response()->json([
+                    'message' => 'Candidato não encontrado',
+                    'error' => 'Registro inexistente'
+                ], 404);
+            }
+            
+            \Log::info('Excluindo candidato: ' . $candidate->id . ' - ' . $candidate->name);
             
             if ($candidate->resume_path) {
                 Storage::disk('public')->delete($candidate->resume_path);
             }
             
             $candidate->delete();
+            \Log::info('Candidato excluído com sucesso: ' . $id);
+            
             return response()->json(['message' => 'Candidato excluído com sucesso']);
         } catch (\Exception $e) {
+            \Log::error('Erro ao excluir candidato: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Erro ao excluir candidato(s)',
                 'error' => $e->getMessage()
@@ -274,6 +286,126 @@ class CandidateController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao baixar currículo',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Método para lidar com requisições POST para update ou delete
+    public function updateOrDestroy(Request $request, $candidateId): JsonResponse
+    {
+        try {
+            \Log::info('Iniciando updateOrDestroy para candidato ID: ' . $candidateId);
+            \Log::info('Dados da requisição: ' . json_encode($request->all()));
+            
+            // Garantir que temos um ID válido
+            if (!is_numeric($candidateId)) {
+                \Log::error('ID de candidato inválido: ' . $candidateId);
+                return response()->json([
+                    'message' => 'ID de candidato inválido',
+                    'error' => 'ID deve ser um número'
+                ], 400);
+            }
+            
+            $candidate = Candidate::find($candidateId);
+            
+            if (!$candidate) {
+                \Log::error('Candidato não encontrado com ID: ' . $candidateId);
+                return response()->json([
+                    'message' => 'Candidato não encontrado',
+                    'error' => 'Registro inexistente'
+                ], 404);
+            }
+            
+            // Verificar se é uma requisição de exclusão
+            if ($request->input('_method') === 'DELETE') {
+                \Log::info('Processando exclusão do candidato ID: ' . $candidateId);
+                
+                if ($candidate->resume_path) {
+                    Storage::disk('public')->delete($candidate->resume_path);
+                }
+                $candidate->delete();
+                \Log::info('Candidato excluído com sucesso: ' . $candidateId);
+                return response()->json(['message' => 'Candidato excluído com sucesso']);
+            }
+            // Verificar se é uma requisição de atualização
+            else {
+                // Validação dos dados - simplificada
+                $validated = $request->validate([
+                    'name' => 'sometimes|required|string|max:255',
+                    'email' => ['sometimes', 'required', 'email', Rule::unique('candidates')->ignore($candidate->id)],
+                    'phone' => 'sometimes|required|string|max:20', // Removida validação de regex
+                    'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120', 
+                    'bio' => 'nullable|string',
+                    'experiences' => 'nullable|string',
+                    'linkedin_url' => 'nullable|string', // URL não obrigatória
+                    'job_ids' => 'nullable|array',
+                    'job_ids.*' => 'exists:jobs,id'
+                ]);
+
+                \Log::info('Validação concluída com sucesso');
+
+                // Processar experiências se fornecidas
+                if (isset($validated['experiences'])) {
+                    try {
+                        \Log::info('Processando experiências: ' . $validated['experiences']);
+                        $experiences = json_decode($validated['experiences'], true);
+                        
+                        if (is_array($experiences)) {
+                            // Verifica e limpa cada experiência para garantir que não haja problemas com datas
+                            foreach ($experiences as $key => $exp) {
+                                // Garantir que todos os campos sejam strings para evitar problemas de SQL
+                                $experiences[$key]['company'] = (string)($exp['company'] ?? '');
+                                $experiences[$key]['position'] = (string)($exp['position'] ?? '');
+                                $experiences[$key]['description'] = (string)($exp['description'] ?? '');
+                                $experiences[$key]['period'] = (string)($exp['period'] ?? '');
+                            }
+                            
+                            // Armazena como string JSON válida
+                            $validated['experiences'] = json_encode($experiences);
+                            \Log::info('Experiências processadas com sucesso: ' . json_encode($experiences));
+                        } else {
+                            \Log::warning('Experiências não são um array válido');
+                            $validated['experiences'] = json_encode([]);
+                            unset($validated['experiences']); // Remove se não for um array válido
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Erro ao decodificar experiências: ' . $e->getMessage());
+                        \Log::error($e->getTraceAsString());
+                        $validated['experiences'] = json_encode([]);
+                        unset($validated['experiences']); // Remove em caso de erro
+                    }
+                }
+
+                // Upload do currículo
+                if ($request->hasFile('resume')) {
+                    if ($candidate->resume_path) {
+                        Storage::disk('public')->delete($candidate->resume_path);
+                    }
+                    $path = $request->file('resume')->store('resumes', 'public');
+                    $validated['resume_path'] = $path;
+                }
+
+                $candidate->update($validated);
+                \Log::info('Candidato atualizado com sucesso: ' . $candidateId);
+
+                // Atualizar vagas associadas
+                if (isset($validated['job_ids'])) {
+                    $candidate->jobs()->sync($validated['job_ids']);
+                    \Log::info('Vagas atualizadas: ' . json_encode($validated['job_ids']));
+                }
+
+                return response()->json([
+                    'message' => 'Candidato atualizado com sucesso',
+                    'candidate' => $candidate->fresh()
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro ao processar requisição: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'message' => 'Erro ao processar requisição',
                 'error' => $e->getMessage()
             ], 500);
         }

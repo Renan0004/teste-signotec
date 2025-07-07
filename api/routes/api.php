@@ -31,6 +31,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Candidatos
     Route::apiResource('candidates', CandidateController::class);
+    Route::get('/candidates', [CandidateController::class, 'index']);
+    
+    // Rota adicional para permitir exclusão e atualização via POST
+    Route::post('/candidates/{candidateId}', [CandidateController::class, 'updateOrDestroy'])->where('candidateId', '[0-9]+');
+    
     Route::post('/candidates/{candidate}/apply', [CandidateController::class, 'applyToJob']);
     Route::get('/candidates/{candidate}/resume', [CandidateController::class, 'downloadResume']);
 }); 

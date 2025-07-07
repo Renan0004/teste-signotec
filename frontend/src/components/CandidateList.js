@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -31,7 +31,14 @@ import {
   Grid,
   Link,
   Stack,
-  Checkbox
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TablePagination,
+  Divider
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -44,8 +51,15 @@ import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FormModal from './FormModal';
 import CandidateForm from './CandidateForm';
-import api from '../services/api';
 import { useSnackbar } from 'notistack';
+import {
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  LinkedIn as LinkedInIcon,
+  Description as DescriptionIcon,
+  Visibility as VisibilityIcon
+} from '@mui/icons-material';
+import api, { candidatesService } from '../services/api';
 
 const CandidateList = () => {
   const [candidates, setCandidates] = useState([]);
@@ -53,7 +67,7 @@ const CandidateList = () => {
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -64,82 +78,128 @@ const CandidateList = () => {
   const [jobs, setJobs] = useState([]);
   const [feedback, setFeedback] = useState({ open: false, message: '', type: 'info' });
   const { enqueueSnackbar } = useSnackbar();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedCandidateDetails, setSelectedCandidateDetails] = useState(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    fetchCandidates();
-    fetchJobs();
-  }, [searchTerm, sortBy, sortDirection, perPage, page]);
-
-  const fetchJobs = async () => {
+  const fetchCandidates = useCallback(async (pageNum = page, search = searchTerm) => {
+    setLoading(true);
     try {
-      const response = await api.get('/jobs', {
-        params: { per_page: 100 }
+      console.log('Buscando candidatos...', { page: pageNum + 1, per_page: perPage, search, sort_by: sortBy, sort_direction: sortDirection });
+      
+      const response = await candidatesService.list({
+        page: pageNum + 1, // API usa paginação baseada em 1
+        per_page: perPage,
+        search,
+        sort_by: sortBy,
+        sort_direction: sortDirection
       });
-      setJobs(response.data.data || []);
-    } catch (error) {
-      console.error('Erro ao buscar vagas:', error);
-      setJobs([]);
-    }
-  };
-
-  const fetchCandidates = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get('/candidates', {
-        params: {
-          search: searchTerm,
-          sort_by: sortBy,
-          sort_direction: sortDirection,
-          per_page: perPage,
-          page: page
-        }
-      });
-
-      if (!response.data) {
-        throw new Error('Resposta inválida da API');
+      
+      console.log('Resposta da API:', response.data);
+      
+      // Verifica se a resposta contém dados
+      if (response.data && response.data.data) {
+        setCandidates(response.data.data);
+        setTotalCandidates(response.data.meta?.total || 0);
+        setTotalPages(Math.ceil((response.data.meta?.total || 0) / perPage));
+      } else {
+        console.warn('Resposta da API não contém dados de candidatos:', response.data);
+        setCandidates([]);
+        setTotalCandidates(0);
+        setTotalPages(1);
       }
-
-      setCandidates(response.data.data || []);
-      setTotalCandidates(response.data.total || 0);
-      setTotalPages(Math.ceil((response.data.total || 0) / (response.data.per_page || perPage)));
+      
+      setError(null);
     } catch (error) {
       console.error('Erro ao buscar candidatos:', error);
-      setError('Erro ao carregar os candidatos. Por favor, tente novamente.');
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      enqueueSnackbar('Erro ao carregar candidatos', { variant: 'error' });
+      setError('Erro ao carregar candidatos. Por favor, tente novamente.');
       setCandidates([]);
       setTotalCandidates(0);
       setTotalPages(1);
     } finally {
       setLoading(false);
     }
+  }, [page, perPage, searchTerm, sortBy, sortDirection, enqueueSnackbar]);
+
+  useEffect(() => {
+    fetchCandidates();
+    fetchJobs();
+  }, [fetchCandidates]);
+
+  useEffect(() => {
+    // Calcula o número total de páginas
+    setTotalPages(Math.ceil(totalCandidates / perPage));
+  }, [totalCandidates, perPage]);
+
+  // Atualiza a lista quando os filtros mudarem
+  useEffect(() => {
+    // Reseta para a primeira página quando os filtros mudarem
+    if (page !== 0) {
+      setPage(0);
+    } else {
+      fetchCandidates(0);
+    }
+  }, [searchTerm, sortBy, sortDirection, fetchCandidates]);
+
+  const fetchJobs = async () => {
+    try {
+      console.log('Buscando vagas...');
+      const response = await api.get('/jobs');
+      console.log('Vagas recebidas:', response.data);
+      
+      // Verifica se a resposta contém dados
+      if (response.data && response.data.data) {
+        setJobs(response.data.data);
+      } else {
+        console.warn('Resposta da API não contém dados de vagas:', response.data);
+        setJobs([]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar vagas:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      enqueueSnackbar('Erro ao carregar vagas', { variant: 'error' });
+      setJobs([]);
+    }
   };
 
   const handleSubmit = async (formData) => {
     try {
-      const url = selectedCandidate
-        ? `http://localhost:8000/api/candidates/${selectedCandidate.id}`
-        : 'http://localhost:8000/api/candidates';
-
-      const method = selectedCandidate ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Erro ao salvar candidato');
-
-      await fetchCandidates();
+      setLoading(true);
+      
+      // Log para debug
+      console.log('Enviando dados do formulário:', formData);
+      
+      if (selectedCandidate) {
+        console.log('Atualizando candidato ID:', selectedCandidate.id);
+        await candidatesService.update(selectedCandidate.id, formData);
+        enqueueSnackbar('Candidato atualizado com sucesso!', { variant: 'success' });
+      } else {
+        console.log('Criando novo candidato');
+        await candidatesService.create(formData);
+        enqueueSnackbar('Candidato adicionado com sucesso!', { variant: 'success' });
+      }
+      
       handleCloseModal();
-      enqueueSnackbar(`Candidato ${selectedCandidate ? 'atualizado' : 'cadastrado'} com sucesso!`, { 
-        variant: 'success' 
-      });
+      fetchCandidates();
     } catch (error) {
       console.error('Erro ao salvar candidato:', error);
-      throw error;
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      
+      // Exibe mensagem de erro mais específica se disponível
+      if (error.response && error.response.data) {
+        const errorMessage = error.response.data.message || 'Erro ao salvar candidato';
+        enqueueSnackbar(errorMessage, { variant: 'error' });
+      } else {
+        enqueueSnackbar('Erro ao salvar candidato. Verifique sua conexão.', { variant: 'error' });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,17 +207,22 @@ const CandidateList = () => {
     if (!window.confirm('Tem certeza que deseja excluir este candidato?')) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/candidates/${id}`, {
-        method: 'DELETE',
+      console.log("Excluindo candidato:", id);
+      await api.post(`/candidates/${id}`, {
+        _method: 'DELETE'
       });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      console.log("Candidato excluído com sucesso");
       await fetchCandidates();
       enqueueSnackbar('Candidato excluído com sucesso!', { 
         variant: 'success' 
       });
     } catch (error) {
       console.error('Erro ao deletar candidato:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      enqueueSnackbar('Erro ao excluir candidato. Por favor, tente novamente.', { 
+        variant: 'error' 
+      });
       setError('Erro ao deletar o candidato. Por favor, tente novamente.');
     }
   };
@@ -179,10 +244,78 @@ const CandidateList = () => {
 
   const getJobTitles = (candidateJobs) => {
     if (!candidateJobs || !Array.isArray(candidateJobs)) return [];
-    return candidateJobs.map(jobId => {
-      const job = jobs.find(j => j.id === jobId);
-      return job ? job.title : '';
+    
+    return candidateJobs.map(job => {
+      // Se job for um objeto com propriedade id e title
+      if (typeof job === 'object' && job !== null) {
+        if (job.title) return job.title;
+        if (job.id) {
+          const jobObj = jobs.find(j => j.id === job.id);
+          return jobObj ? jobObj.title : '';
+        }
+      } 
+      // Se job for apenas um ID
+      else if (typeof job === 'number') {
+        const jobObj = jobs.find(j => j.id === job);
+        return jobObj ? jobObj.title : '';
+      }
+      return '';
     }).filter(Boolean);
+  };
+
+  const handleDeleteClick = (candidate) => {
+    setCandidateToDelete(candidate);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setCandidateToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!candidateToDelete) return;
+    
+    setLoading(true);
+    try {
+      await candidatesService.delete(candidateToDelete.id);
+      enqueueSnackbar('Candidato excluído com sucesso!', { variant: 'success' });
+      fetchCandidates();
+    } catch (error) {
+      console.error('Erro ao excluir candidato:', error);
+      enqueueSnackbar('Erro ao excluir candidato', { variant: 'error' });
+    } finally {
+      setDeleteDialogOpen(false);
+      setCandidateToDelete(null);
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = (candidate) => {
+    setSelectedCandidateDetails(candidate);
+    setDetailsDialogOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsDialogOpen(false);
+    setSelectedCandidateDetails(null);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSortByChange = (e) => {
+    setSortBy(e.target.value);
+  };
+
+  const handleSortDirectionChange = (e) => {
+    setSortDirection(e.target.value);
+  };
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage - 1); // Ajusta para base-0
+    fetchCandidates(newPage - 1);
   };
 
   if (loading) {
@@ -271,7 +404,7 @@ const CandidateList = () => {
               fullWidth
               placeholder="Buscar candidatos..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -298,7 +431,7 @@ const CandidateList = () => {
               <InputLabel>Ordenar por</InputLabel>
               <Select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={handleSortByChange}
                 label="Ordenar por"
               >
                 <MenuItem value="name">Nome</MenuItem>
@@ -313,7 +446,7 @@ const CandidateList = () => {
               <InputLabel>Direção</InputLabel>
               <Select
                 value={sortDirection}
-                onChange={(e) => setSortDirection(e.target.value)}
+                onChange={handleSortDirectionChange}
                 label="Direção"
               >
                 <MenuItem value="asc">Crescente</MenuItem>
@@ -361,7 +494,7 @@ const CandidateList = () => {
           {isMobile ? (
             <Grid container spacing={2}>
               {candidates.map((candidate) => (
-                <Grid item xs={12} key={candidate.id}>
+                <Grid item xs={12} key={`candidate-${candidate.id}`}>
                   <Card
                     sx={{
                       borderRadius: 2,
@@ -392,7 +525,7 @@ const CandidateList = () => {
                           <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                             {getJobTitles(candidate.jobs).map((title, index) => (
                               <Chip
-                                key={index}
+                                key={`job-chip-${candidate.id}-${index}`}
                                 label={title}
                                 size="small"
                                 variant="outlined"
@@ -415,7 +548,7 @@ const CandidateList = () => {
                         size="small"
                         color="error"
                         startIcon={<DeleteIcon />}
-                        onClick={() => handleDelete(candidate.id)}
+                        onClick={() => handleDeleteClick(candidate)}
                       >
                         Excluir
                       </Button>
@@ -425,96 +558,31 @@ const CandidateList = () => {
               ))}
             </Grid>
           ) : (
-            <TableContainer 
-              component={Paper}
-              sx={{ 
-                borderRadius: 2,
-                boxShadow: 'none',
-                border: '1px solid',
-                borderColor: 'divider'
-              }}
-            >
+            <TableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
                     <TableCell>Nome</TableCell>
                     <TableCell>E-mail</TableCell>
                     <TableCell>Telefone</TableCell>
-                    <TableCell>Currículo</TableCell>
-                    <TableCell>Vagas de Interesse</TableCell>
-                    <TableCell align="right">Ações</TableCell>
+                    <TableCell>Vagas</TableCell>
+                    <TableCell>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {candidates.map((candidate) => (
-                    <TableRow
-                      key={candidate.id}
-                      hover
-                      sx={{
-                        '&:last-child td, &:last-child th': { border: 0 },
-                        transition: 'background-color 0.2s'
-                      }}
-                    >
-                      <TableCell component="th" scope="row">
-                        <Typography variant="subtitle2">
-                          {candidate.name}
-                        </Typography>
-                      </TableCell>
+                    <TableRow key={candidate.id}>
+                      <TableCell>{candidate.name}</TableCell>
                       <TableCell>{candidate.email}</TableCell>
                       <TableCell>{candidate.phone}</TableCell>
+                      <TableCell>{getJobTitles(candidate.jobs).join(', ')}</TableCell>
                       <TableCell>
-                        {candidate.resume_path && (
-                          <Link
-                            href={`http://localhost:8000/storage/${candidate.resume_path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              color: 'primary.main',
-                              textDecoration: 'none',
-                              '&:hover': {
-                                textDecoration: 'underline'
-                              }
-                            }}
-                          >
-                            <DownloadIcon fontSize="small" />
-                            Baixar CV
-                          </Link>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          {getJobTitles(candidate.jobs).map((title, index) => (
-                            <Chip
-                              key={index}
-                              label={title}
-                              size="small"
-                              variant="outlined"
-                            />
-                          ))}
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Editar">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(candidate)}
-                            sx={{ mr: 1 }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Excluir">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(candidate.id)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <IconButton onClick={() => handleEdit(candidate)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton onClick={() => handleDeleteClick(candidate)}>
+                          <DeleteIcon />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -522,30 +590,30 @@ const CandidateList = () => {
               </Table>
             </TableContainer>
           )}
-
-          {/* Pagination */}
-          <Box
-            sx={{
-              mt: 3,
-              display: 'flex',
-              justifyContent: 'center'
-            }}
-          >
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(e, value) => setPage(value)}
-              color="primary"
-              size={isMobile ? "small" : "medium"}
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  borderRadius: 1
-                }
-              }}
-            />
-          </Box>
         </>
       )}
+
+      {/* Pagination */}
+      <Box
+        sx={{
+          mt: 3,
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
+        <Pagination
+          count={totalPages}
+          page={page + 1}
+          onChange={handlePageChange}
+          color="primary"
+          size={isMobile ? "small" : "medium"}
+          sx={{
+            '& .MuiPaginationItem-root': {
+              borderRadius: 1
+            }
+          }}
+        />
+      </Box>
 
       {/* Modal */}
       <FormModal
@@ -560,8 +628,171 @@ const CandidateList = () => {
           availableJobs={jobs}
         />
       </FormModal>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+      >
+        <DialogTitle>Confirmar exclusão</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tem certeza que deseja excluir o candidato "{candidateToDelete?.name}"? 
+            Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : null}
+          >
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de detalhes do candidato */}
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={handleCloseDetails}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedCandidateDetails && (
+          <>
+            <DialogTitle>
+              Detalhes do Candidato
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  {selectedCandidateDetails.name}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <EmailIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {selectedCandidateDetails.email}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {selectedCandidateDetails.phone}
+                    </Typography>
+                  </Box>
+                  
+                  {selectedCandidateDetails.linkedin && (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <LinkedInIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2">
+                        {selectedCandidateDetails.linkedin}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+                
+                {selectedCandidateDetails.description && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
+                      Descrição
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedCandidateDetails.description}
+                    </Typography>
+                  </Box>
+                )}
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Typography variant="subtitle1" gutterBottom>
+                  Vagas de Interesse
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  {selectedCandidateDetails.jobs && selectedCandidateDetails.jobs.length > 0 ? (
+                    selectedCandidateDetails.jobs.map(job => (
+                      <Chip 
+                        key={`detail-job-${job.id}`}
+                        label={job.title} 
+                        color="primary" 
+                        variant="outlined" 
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Nenhuma vaga selecionada
+                    </Typography>
+                  )}
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Typography variant="subtitle1" gutterBottom>
+                  Experiências
+                </Typography>
+                
+                {selectedCandidateDetails.experiences && selectedCandidateDetails.experiences.length > 0 ? (
+                  selectedCandidateDetails.experiences.map((exp, index) => (
+                    <Box 
+                      key={`detail-exp-${index}`}
+                      sx={{ 
+                        mb: 2, 
+                        p: 2, 
+                        border: '1px solid', 
+                        borderColor: 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography variant="subtitle2">
+                        {exp.position} - {exp.company}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        {exp.period}
+                      </Typography>
+                      {exp.description && (
+                        <Typography variant="body2">
+                          {exp.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhuma experiência cadastrada
+                  </Typography>
+                )}
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDetails}>
+                Fechar
+              </Button>
+              <Button 
+                onClick={() => {
+                  handleCloseDetails();
+                  handleEdit(selectedCandidateDetails);
+                }} 
+                color="primary"
+                variant="contained"
+                startIcon={<EditIcon />}
+              >
+                Editar
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 };
 
-export default CandidateList; 
+export default CandidateList;

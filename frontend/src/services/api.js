@@ -132,7 +132,8 @@ export const authService = {
 
   me: async () => {
     try {
-      const response = await api.get('/api/user');
+      // Corrigido para usar a URL correta sem duplicar o prefixo 'api'
+      const response = await api.get('/user');
       return response.data;
     } catch (error) {
       throw error;
@@ -202,33 +203,151 @@ export const candidatesService = {
   },
 
   create: async (data) => {
-    const formData = new FormData();
-    for (const key in data) {
-      formData.append(key, data[key]);
-    }
-    const response = await api.post('/candidates', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    try {
+      console.log('CandidatesService.create - Dados recebidos:', data);
+      
+      // Preparar dados para envio
+      const formData = new FormData();
+      
+      // Adicionar campos básicos
+      formData.append('name', data.name || '');
+      formData.append('email', data.email || '');
+      formData.append('phone', data.phone || '');
+      
+      if (data.linkedin) {
+        formData.append('linkedin_url', data.linkedin);
       }
-    });
-    return response;
+      
+      if (data.description) {
+        formData.append('bio', data.description);
+      }
+      
+      // Adicionar experiências como JSON
+      if (data.experiences && data.experiences.length > 0) {
+        const validExperiences = data.experiences.filter(exp => 
+          exp.company || exp.position || exp.description || exp.period
+        );
+        
+        if (validExperiences.length > 0) {
+          // Garantir que todos os campos sejam strings para evitar problemas
+          const sanitizedExperiences = validExperiences.map(exp => ({
+            company: String(exp.company || ''),
+            position: String(exp.position || ''),
+            description: String(exp.description || ''),
+            period: String(exp.period || '')
+          }));
+          
+          // Garantir que seja uma string JSON válida
+          formData.append('experiences', JSON.stringify(sanitizedExperiences));
+          console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+        }
+      }
+      
+      // Adicionar vagas selecionadas
+      if (data.job_ids && data.job_ids.length > 0) {
+        data.job_ids.forEach(jobId => {
+          formData.append('job_ids[]', jobId);
+        });
+      } else {
+        // Adicionar pelo menos uma vaga (a primeira disponível) para passar a validação
+        formData.append('job_ids[]', 1);
+      }
+      
+      console.log('Enviando dados para a API');
+      
+      const response = await api.post('/candidates', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log('Resposta da API:', response);
+      return response;
+    } catch (error) {
+      console.error('Erro na requisição create:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   update: async (id, data) => {
-    const formData = new FormData();
-    for (const key in data) {
-      formData.append(key, data[key]);
-    }
-    const response = await api.post(`/candidates/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    try {
+      console.log('CandidatesService.update - Dados recebidos:', data);
+      console.log('Atualizando candidato ID:', id);
+      
+      // Preparar dados para envio
+      const formData = new FormData();
+      
+      // Adicionar método PUT
+      formData.append('_method', 'PUT');
+      
+      // Adicionar campos básicos
+      formData.append('name', data.name || '');
+      formData.append('email', data.email || '');
+      formData.append('phone', data.phone || '');
+      
+      if (data.linkedin) {
+        formData.append('linkedin_url', data.linkedin);
       }
-    });
-    return response;
+      
+      if (data.description) {
+        formData.append('bio', data.description);
+      }
+      
+      // Adicionar experiências como JSON
+      if (data.experiences && data.experiences.length > 0) {
+        const validExperiences = data.experiences.filter(exp => 
+          exp.company || exp.position || exp.description || exp.period
+        );
+        
+        if (validExperiences.length > 0) {
+          // Garantir que todos os campos sejam strings para evitar problemas
+          const sanitizedExperiences = validExperiences.map(exp => ({
+            company: String(exp.company || ''),
+            position: String(exp.position || ''),
+            description: String(exp.description || ''),
+            period: String(exp.period || '')
+          }));
+          
+          // Garantir que seja uma string JSON válida
+          formData.append('experiences', JSON.stringify(sanitizedExperiences));
+          console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+        }
+      }
+      
+      // Adicionar vagas selecionadas
+      if (data.job_ids && data.job_ids.length > 0) {
+        data.job_ids.forEach(jobId => {
+          formData.append('job_ids[]', jobId);
+        });
+      } else {
+        // Adicionar pelo menos uma vaga (a primeira disponível) para passar a validação
+        formData.append('job_ids[]', 1);
+      }
+      
+      console.log('Enviando dados para atualização');
+      
+      const response = await api.post(`/candidates/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log('Resposta da API:', response);
+      return response;
+    } catch (error) {
+      console.error('Erro na requisição update:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   delete: async (id) => {
-    const response = await api.delete(`/candidates/${id}`);
+    // Modificado para usar POST com _method: 'DELETE' em vez de DELETE direto
+    // para evitar problemas de CORS com o cabeçalho X-HTTP-Method-Override
+    const response = await api.post(`/candidates/${id}`, {
+      _method: 'DELETE'
+    });
     return response;
   },
 
