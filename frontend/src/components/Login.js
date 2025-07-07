@@ -69,33 +69,33 @@ const Login = () => {
     return (
         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', maxWidth: 450, mx: 'auto' }}>
             <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: '1px solid #e0e0e0' }}>
-                <Box sx={{ mb: 3, textAlign: 'center' }}>
-                    <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
-                        Sistema de Gerenciamento de Vagas
-                    </Typography>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h5" component="h1" color="primary" gutterBottom fontWeight={700}>
+                    Sistema de Gerenciamento de Vagas
+                            </Typography>
                     <Typography variant="body2" color="text.secondary">
                         Entre com suas credenciais para acessar o sistema
                     </Typography>
-                </Box>
+                        </Box>
 
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
-                <TextField
-                    fullWidth
-                    label="E-mail"
-                    type="email"
-                    value={email}
-                    onChange={handleEmailChange}
-                    margin="normal"
-                    required
-                    autoComplete="email"
-                    autoFocus
-                    error={!!error}
-                    sx={{ mb: 2 }}
+                                    <TextField
+                fullWidth
+                                        label="E-mail"
+                                        type="email"
+                value={email}
+                onChange={handleEmailChange}
+                margin="normal"
+                required
+                autoComplete="email"
+                                        autoFocus
+                error={!!error}
+                sx={{ mb: 2 }}
                     size="small"
                     InputProps={{
                         startAdornment: (
@@ -104,77 +104,77 @@ const Login = () => {
                             </InputAdornment>
                         ),
                     }}
-                />
+            />
 
-                <TextField
-                    fullWidth
-                    label="Senha"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={handlePasswordChange}
-                    margin="normal"
-                    required
-                    autoComplete="current-password"
-                    error={!!error}
+                                    <TextField
+                fullWidth
+                                        label="Senha"
+                                        type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={handlePasswordChange}
+                margin="normal"
+                required
+                autoComplete="current-password"
+                error={!!error}
                     size="small"
-                    InputProps={{
+                                        InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
                                 <LockIcon color="action" />
                             </InputAdornment>
                         ),
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleClickShowPassword}
-                                    edge="end"
-                                >
-                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{ mb: 3 }}
-                />
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                aria-label="toggle password visibility"
+                                                        onClick={handleClickShowPassword}
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                    ),
+                                        }}
+                sx={{ mb: 3 }}
+                                    />
 
-                <Button
-                    type="submit"
-                    fullWidth
-                    variant="contained"
-                    disabled={isSubmitting}
-                    sx={{
+                                <Button
+                                    type="submit"
+                fullWidth
+                                    variant="contained"
+                                    disabled={isSubmitting}
+                sx={{
                         py: 1.2,
-                        mb: 2,
+                    mb: 2,
                         fontWeight: 600,
                         fontSize: '0.95rem',
-                        textTransform: 'none',
+                    textTransform: 'none',
                         borderRadius: 1,
+                    boxShadow: 'none',
+                    '&:hover': {
                         boxShadow: 'none',
-                        '&:hover': {
-                            boxShadow: 'none',
                             backgroundColor: 'primary.dark',
-                        },
-                    }}
-                >
-                    {isSubmitting ? 'Entrando...' : 'Entrar'}
-                </Button>
+                    },
+                }}
+                                >
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
+                                </Button>
 
                 <Divider sx={{ my: 2 }} />
 
-                <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                        Não tem uma conta?{' '}
-                        <Link
-                            component={RouterLink}
-                            to="/auth/register"
-                            color="primary"
-                            sx={{ fontWeight: 600, textDecoration: 'none' }}
-                        >
-                            Cadastre-se
-                        </Link>
-                    </Typography>
-                </Box>
+            <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                            Não tem uma conta?{' '}
+                    <Link
+                        component={RouterLink}
+                        to="/auth/register"
+                        color="primary"
+                        sx={{ fontWeight: 600, textDecoration: 'none' }}
+                    >
+                        Cadastre-se
+                            </Link>
+                        </Typography>
+            </Box>
             </Paper>
         </Box>
     );

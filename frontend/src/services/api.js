@@ -118,7 +118,16 @@ export const authService = {
 
   logout: async () => {
     try {
-      await sanctumApi.post('/api/logout');
+      // Obter o token antes de fazer o logout
+      const token = localStorage.getItem('token');
+      
+      // Verificar se há um token antes de tentar fazer logout no servidor
+      if (token) {
+        // Usar a instância api que já tem o interceptor para adicionar o token
+        await api.post('/logout');
+      }
+      
+      // Limpar dados locais independentemente do resultado da requisição
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     } catch (error) {
@@ -223,24 +232,44 @@ export const candidatesService = {
       }
       
       // Adicionar experiências como JSON
-      if (data.experiences && data.experiences.length > 0) {
-        const validExperiences = data.experiences.filter(exp => 
-          exp.company || exp.position || exp.description || exp.period
-        );
-        
-        if (validExperiences.length > 0) {
-          // Garantir que todos os campos sejam strings para evitar problemas
-          const sanitizedExperiences = validExperiences.map(exp => ({
-            company: String(exp.company || ''),
-            position: String(exp.position || ''),
-            description: String(exp.description || ''),
-            period: String(exp.period || '')
-          }));
+      if (data.experiences) {
+        // Se já for uma string JSON, use-a diretamente
+        if (typeof data.experiences === 'string') {
+          try {
+            // Verifica se é um JSON válido
+            JSON.parse(data.experiences);
+            formData.append('experiences', data.experiences);
+            console.log('Experiências enviadas como string JSON:', data.experiences);
+          } catch (e) {
+            console.error('String de experiências inválida:', e);
+            formData.append('experiences', '[]');
+          }
+        } else if (Array.isArray(data.experiences) && data.experiences.length > 0) {
+          // Se for um array, converta para string JSON
+          const validExperiences = data.experiences.filter(exp => 
+            exp.company || exp.position || exp.description || exp.period
+          );
           
-          // Garantir que seja uma string JSON válida
-          formData.append('experiences', JSON.stringify(sanitizedExperiences));
-          console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+          if (validExperiences.length > 0) {
+            // Garantir que todos os campos sejam strings para evitar problemas
+            const sanitizedExperiences = validExperiences.map(exp => ({
+              company: String(exp.company || ''),
+              position: String(exp.position || ''),
+              description: String(exp.description || ''),
+              period: String(exp.period || '')
+            }));
+            
+            // Garantir que seja uma string JSON válida
+            formData.append('experiences', JSON.stringify(sanitizedExperiences));
+            console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+          } else {
+            formData.append('experiences', '[]');
+          }
+        } else {
+          formData.append('experiences', '[]');
         }
+      } else {
+        formData.append('experiences', '[]');
       }
       
       // Adicionar vagas selecionadas
@@ -248,12 +277,21 @@ export const candidatesService = {
         data.job_ids.forEach(jobId => {
           formData.append('job_ids[]', jobId);
         });
-      } else {
-        // Adicionar pelo menos uma vaga (a primeira disponível) para passar a validação
-        formData.append('job_ids[]', 1);
       }
       
-      console.log('Enviando dados para a API');
+      // Adicionar currículo se fornecido
+      if (data.resume && data.resume instanceof File) {
+        formData.append('resume', data.resume);
+      }
+      
+      // Log para debug
+      console.log('Enviando dados para a API:', {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        experiences: formData.get('experiences'),
+        job_ids: formData.getAll('job_ids[]')
+      });
       
       const response = await api.post('/candidates', formData, {
         headers: {
@@ -261,11 +299,17 @@ export const candidatesService = {
         }
       });
       
-      console.log('Resposta da API:', response);
       return response;
     } catch (error) {
       console.error('Erro na requisição create:', error);
-      console.error('Detalhes do erro:', error.response?.data || error.message);
+      console.error('Detalhes do erro:', error.response?.data);
+      
+      // Se for erro de validação, formata a resposta para ser mais útil
+      if (error.response?.status === 422) {
+        const validationErrors = error.response.data.errors || {};
+        error.validationErrors = validationErrors;
+      }
+      
       throw error;
     }
   },
@@ -295,24 +339,44 @@ export const candidatesService = {
       }
       
       // Adicionar experiências como JSON
-      if (data.experiences && data.experiences.length > 0) {
-        const validExperiences = data.experiences.filter(exp => 
-          exp.company || exp.position || exp.description || exp.period
-        );
-        
-        if (validExperiences.length > 0) {
-          // Garantir que todos os campos sejam strings para evitar problemas
-          const sanitizedExperiences = validExperiences.map(exp => ({
-            company: String(exp.company || ''),
-            position: String(exp.position || ''),
-            description: String(exp.description || ''),
-            period: String(exp.period || '')
-          }));
+      if (data.experiences) {
+        // Se já for uma string JSON, use-a diretamente
+        if (typeof data.experiences === 'string') {
+          try {
+            // Verifica se é um JSON válido
+            JSON.parse(data.experiences);
+            formData.append('experiences', data.experiences);
+            console.log('Experiências enviadas como string JSON:', data.experiences);
+          } catch (e) {
+            console.error('String de experiências inválida:', e);
+            formData.append('experiences', '[]');
+          }
+        } else if (Array.isArray(data.experiences) && data.experiences.length > 0) {
+          // Se for um array, filtra e converte para string JSON
+          const validExperiences = data.experiences.filter(exp => 
+            exp.company || exp.position || exp.description || exp.period
+          );
           
-          // Garantir que seja uma string JSON válida
-          formData.append('experiences', JSON.stringify(sanitizedExperiences));
-          console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+          if (validExperiences.length > 0) {
+            // Garantir que todos os campos sejam strings para evitar problemas
+            const sanitizedExperiences = validExperiences.map(exp => ({
+              company: String(exp.company || ''),
+              position: String(exp.position || ''),
+              description: String(exp.description || ''),
+              period: String(exp.period || '')
+            }));
+            
+            // Garantir que seja uma string JSON válida
+            formData.append('experiences', JSON.stringify(sanitizedExperiences));
+            console.log('Experiências enviadas:', JSON.stringify(sanitizedExperiences));
+          } else {
+            formData.append('experiences', '[]');
+          }
+        } else {
+          formData.append('experiences', '[]');
         }
+      } else {
+        formData.append('experiences', '[]');
       }
       
       // Adicionar vagas selecionadas
@@ -343,12 +407,21 @@ export const candidatesService = {
   },
 
   delete: async (id) => {
-    // Modificado para usar POST com _method: 'DELETE' em vez de DELETE direto
-    // para evitar problemas de CORS com o cabeçalho X-HTTP-Method-Override
-    const response = await api.post(`/candidates/${id}`, {
-      _method: 'DELETE'
-    });
-    return response;
+    try {
+      console.log('CandidatesService.delete - Excluindo candidato ID:', id);
+      
+      // Usar POST com _method: 'DELETE' para evitar problemas de CORS
+      const response = await api.post(`/candidates/${id}`, {
+        _method: 'DELETE'
+      });
+      
+      console.log('Resposta da API após exclusão:', response);
+      return response;
+    } catch (error) {
+      console.error('Erro na requisição delete:', error);
+      console.error('Detalhes do erro:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   downloadResume: async (id) => {

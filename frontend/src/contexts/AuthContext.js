@@ -138,12 +138,13 @@ export const AuthProvider = ({ children }) => {
       enqueueSnackbar('Logout realizado com sucesso!', { variant: 'success' });
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Mesmo com erro, limpa os dados locais
+      // Mesmo com erro, limpa os dados locais e redireciona
       setUser(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/auth/login', { replace: true });
-      enqueueSnackbar('Erro ao fazer logout, mas você foi desconectado.', { variant: 'warning' });
+      // Mensagem mais amigável para o usuário
+      enqueueSnackbar('Você foi desconectado com sucesso.', { variant: 'success' });
     } finally {
       setLoading(false);
     }

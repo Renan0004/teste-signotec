@@ -154,11 +154,18 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-        $request->user()->currentAccessToken()->delete();
+            // Verificar se o usuário está autenticado
+            if ($request->user()) {
+                $request->user()->currentAccessToken()->delete();
+            }
+            
             return response()->json([
                 'message' => 'Logout realizado com sucesso'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Erro ao fazer logout: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Erro ao fazer logout',
                 'error' => $e->getMessage()

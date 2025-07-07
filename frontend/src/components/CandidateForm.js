@@ -62,23 +62,48 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
     if (availableJobs && availableJobs.length > 0) {
       setJobs(availableJobs);
     } else {
-      fetchJobs();
+    fetchJobs();
     }
     
     // Inicializa com os dados do candidato se disponíveis
     if (initialData) {
+      // Processa as experiências para garantir que seja um array
+      let experiencesArray = [];
+      
+      if (initialData.experiences) {
+        if (typeof initialData.experiences === 'string') {
+          try {
+            // Tenta converter de string JSON para array
+            experiencesArray = JSON.parse(initialData.experiences);
+            if (!Array.isArray(experiencesArray)) {
+              experiencesArray = [{ company: '', position: '', description: '', period: '' }];
+            }
+          } catch (e) {
+            console.error('Erro ao converter experiências de string para array:', e);
+            experiencesArray = [{ company: '', position: '', description: '', period: '' }];
+          }
+        } else if (Array.isArray(initialData.experiences)) {
+          experiencesArray = initialData.experiences;
+        }
+      }
+      
+      // Garante que haja pelo menos uma experiência vazia
+      if (experiencesArray.length === 0) {
+        experiencesArray = [{ company: '', position: '', description: '', period: '' }];
+      }
+      
       setFormData({
         name: initialData.name || '',
         email: initialData.email || '',
         phone: initialData.phone || '',
-        linkedin: initialData.linkedin || '',
-        description: initialData.description || '',
-        experiences: initialData.experiences && initialData.experiences.length > 0 
-          ? initialData.experiences.map(exp => ({
-              ...exp,
-              period: typeof exp.period === 'string' ? exp.period : ''
-            }))
-          : [{ company: '', position: '', description: '', period: '' }]
+        linkedin: initialData.linkedin_url || initialData.linkedin || '',
+        description: initialData.bio || initialData.description || '',
+        experiences: experiencesArray.map(exp => ({
+          company: exp.company || '',
+          position: exp.position || '',
+          description: exp.description || '',
+          period: typeof exp.period === 'string' ? exp.period : ''
+        }))
       });
       
       if (initialData.jobs) {
@@ -121,17 +146,17 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
 
   const handlePhoneChange = (e) => {
     const digits = e.target.value.replace(/\D/g, '');
-    const limitedDigits = digits.substring(0, 11);
-    
-    let formattedPhone = '';
-    if (limitedDigits.length <= 2) {
-      formattedPhone = limitedDigits.length === 0 ? '' : `(${limitedDigits}`;
-    } else if (limitedDigits.length <= 7) {
-      formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2)}`;
-    } else {
-      formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2, 7)}-${limitedDigits.substring(7)}`;
-    }
-    
+      const limitedDigits = digits.substring(0, 11);
+      
+      let formattedPhone = '';
+      if (limitedDigits.length <= 2) {
+        formattedPhone = limitedDigits.length === 0 ? '' : `(${limitedDigits}`;
+      } else if (limitedDigits.length <= 7) {
+        formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2)}`;
+      } else {
+        formattedPhone = `(${limitedDigits.substring(0, 2)}) ${limitedDigits.substring(2, 7)}-${limitedDigits.substring(7)}`;
+      }
+      
     handleChange({
       target: {
         name: 'phone',
@@ -314,16 +339,34 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
     
     try {
       // Prepara os dados para envio
-      const formattedExperiences = formData.experiences.map(exp => ({
-        company: String(exp.company || ''),
-        position: String(exp.position || ''),
-        description: String(exp.description || ''),
-        period: String(exp.period || '')
-      }));
+      let formattedExperiences = [];
+      
+      // Verifica se experiences é um array antes de usar filter
+      if (Array.isArray(formData.experiences)) {
+        formattedExperiences = formData.experiences
+          .filter(exp => exp.company || exp.position || exp.description || exp.period)
+          .map(exp => ({
+            company: String(exp.company || ''),
+            position: String(exp.position || ''),
+            description: String(exp.description || ''),
+            period: String(exp.period || '')
+          }));
+      } else if (typeof formData.experiences === 'string') {
+        // Se já for uma string JSON, tenta parsear
+        try {
+          const parsed = JSON.parse(formData.experiences);
+          if (Array.isArray(parsed)) {
+            formattedExperiences = parsed;
+          }
+        } catch (e) {
+          console.error('Erro ao parsear experiences como string JSON:', e);
+          formattedExperiences = [];
+        }
+      }
       
       const dataToSubmit = {
         ...formData,
-        experiences: formattedExperiences,
+        experiences: JSON.stringify(formattedExperiences),
         job_ids: selectedJobs.length > 0 ? selectedJobs : [1] // Garantir que pelo menos uma vaga seja enviada
       };
       
@@ -339,13 +382,25 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
       console.error('Erro ao salvar candidato:', error);
       
       // Trata erros de validação da API
-      if (error.response && error.response.data && error.response.data.errors) {
-        const apiErrors = {};
-        Object.entries(error.response.data.errors).forEach(([key, messages]) => {
-          apiErrors[key] = messages[0];
-        });
-        setErrors(apiErrors);
-        enqueueSnackbar('Verifique os erros no formulário', { variant: 'error' });
+      if (error.response && error.response.data) {
+        if (error.response.data.errors) {
+          const apiErrors = {};
+          Object.entries(error.response.data.errors).forEach(([key, messages]) => {
+            apiErrors[key] = Array.isArray(messages) ? messages[0] : messages;
+          });
+          setErrors(apiErrors);
+          
+          // Exibe mensagem específica para e-mail duplicado
+          if (apiErrors.email && apiErrors.email.includes('já está cadastrado')) {
+            enqueueSnackbar('Este e-mail já está cadastrado para outro candidato', { variant: 'error' });
+          } else {
+            enqueueSnackbar('Verifique os erros no formulário', { variant: 'error' });
+          }
+        } else if (error.response.data.message) {
+          enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        } else {
+          enqueueSnackbar('Erro ao salvar candidato', { variant: 'error' });
+        }
       } else {
         // Mensagem genérica de erro
         enqueueSnackbar(error.message || 'Erro ao salvar candidato', { variant: 'error' });
@@ -360,97 +415,97 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
     setExpandedExperience(isExpanded ? index : -1);
   };
 
-  return (
+        return (
     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
       <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 1 }}>
         <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-          Informações Pessoais
-        </Typography>
+                Informações Pessoais
+              </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
+              <Grid item xs={12}>
+                <TextField
               required
-              fullWidth
+                  fullWidth
               label="Nome"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
               error={!!errors.name}
               helperText={errors.name}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PersonIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
               size="small"
-            />
-          </Grid>
+                />
+              </Grid>
           
           <Grid item xs={12} md={6}>
-            <TextField
+                <TextField
               required
-              fullWidth
+                  fullWidth
               label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
               error={!!errors.email}
               helperText={errors.email}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
               size="small"
-            />
-          </Grid>
+                />
+              </Grid>
           
           <Grid item xs={12} md={6}>
-            <TextField
+                <TextField
               required
-              fullWidth
-              label="Telefone"
-              value={formData.phone}
+                  fullWidth
+                  label="Telefone"
+                  value={formData.phone}
               onChange={handlePhoneChange}
               error={!!errors.phone}
               helperText={errors.phone || 'Formato: (00) 00000-0000'}
-              placeholder="(00) 00000-0000"
-              inputProps={{
-                inputMode: 'tel',
+                  placeholder="(00) 00000-0000"
+                  inputProps={{
+                    inputMode: 'tel',
                 maxLength: 15,
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PhoneIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
               size="small"
-            />
-          </Grid>
+                />
+              </Grid>
           
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
               label="LinkedIn"
-              name="linkedin"
-              value={formData.linkedin}
-              onChange={handleChange}
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleChange}
               error={!!errors.linkedin}
               helperText={errors.linkedin}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LinkedInIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LinkedInIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
               size="small"
             />
           </Grid>
@@ -474,16 +529,16 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                 ),
               }}
               size="small"
-            />
-          </Grid>
-        </Grid>
+                />
+              </Grid>
+            </Grid>
       </Paper>
       
       <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 1 }}>
         <Typography variant="subtitle1" fontWeight="medium" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
           <WorkIcon sx={{ mr: 1, fontSize: '1.2rem' }} />
           Vagas de Interesse
-        </Typography>
+              </Typography>
         
         <FormControl fullWidth error={!!errors.job_ids} size="small">
           <InputLabel id="jobs-label">Selecione as vagas</InputLabel>
@@ -538,7 +593,7 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="subtitle1" fontWeight="medium">
             Experiências
-          </Typography>
+              </Typography>
           
           <Button
             startIcon={<AddIcon />}
@@ -550,9 +605,9 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
           >
             Adicionar
           </Button>
-        </Box>
-        
-        {formData.experiences.map((experience, index) => (
+            </Box>
+
+            {formData.experiences.map((experience, index) => (
           <Accordion 
             key={`experience-${index}`}
             expanded={expandedExperience === index}
@@ -580,41 +635,41 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                   ? `${experience.company || ''} ${experience.position ? `- ${experience.position}` : ''}`
                   : `Experiência ${index + 1}`
                 }
-              </Typography>
+                </Typography>
             </AccordionSummary>
-            
+                
             <AccordionDetails sx={{ p: 2, pt: 0 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
+                  <Grid item xs={12} sm={6}>
+                    <TextField
                     required
-                    fullWidth
-                    label="Empresa"
+                      fullWidth
+                      label="Empresa"
                     value={experience.company || ''}
-                    onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                      onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
                     error={!!errors[`experiences.${index}.company`]}
                     helperText={errors[`experiences.${index}.company`]}
                     size="small"
-                  />
-                </Grid>
+                    />
+                  </Grid>
                 
-                <Grid item xs={12} sm={6}>
-                  <TextField
+                  <Grid item xs={12} sm={6}>
+                    <TextField
                     required
-                    fullWidth
-                    label="Cargo"
+                      fullWidth
+                      label="Cargo"
                     value={experience.position || ''}
-                    onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
+                      onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
                     error={!!errors[`experiences.${index}.position`]}
                     helperText={errors[`experiences.${index}.position`]}
                     size="small"
-                  />
-                </Grid>
+                    />
+                  </Grid>
                 
-                <Grid item xs={12} sm={6}>
-                  <TextField
+                  <Grid item xs={12} sm={6}>
+                    <TextField
                     required
-                    fullWidth
+                      fullWidth
                     label="Período (MM/AAAA)"
                     value={experience.period || ''}
                     onChange={(e) => handlePeriodChange(index, e)}
@@ -622,22 +677,22 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     helperText={errors[`experiences.${index}.period`] || 'Ex: 01/2020'}
                     placeholder="MM/AAAA"
                     size="small"
-                  />
-                </Grid>
+                    />
+                  </Grid>
                 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
                     label="Descrição"
                     value={experience.description || ''}
                     onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                    multiline
+                      multiline
                     rows={2}
                     size="small"
-                  />
+                    />
+                  </Grid>
                 </Grid>
-              </Grid>
-              
+
               {formData.experiences.length > 1 && (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                   <Button
@@ -647,7 +702,7 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
                     startIcon={<DeleteIcon />}
                   >
                     Remover
-                  </Button>
+              </Button>
                 </Box>
               )}
             </AccordionDetails>
@@ -656,25 +711,25 @@ const CandidateForm = ({ initialData = null, onSubmit, onCancel, availableJobs =
       </Paper>
       
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          variant="outlined"
+          <Button
+            variant="outlined"
           onClick={onCancel}
           disabled={loading}
           type="button"
         >
           Cancelar
-        </Button>
-        
-        <Button
+          </Button>
+          
+            <Button
           type="submit"
-          variant="contained"
+              variant="contained"
           color="primary"
-          disabled={loading}
+              disabled={loading}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
           {initialData ? 'Atualizar' : 'Cadastrar'}
-        </Button>
-      </Box>
+            </Button>
+        </Box>
     </Box>
   );
 };

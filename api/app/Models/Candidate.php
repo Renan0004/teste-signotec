@@ -34,6 +34,18 @@ class Candidate extends Model
 
     protected $appends = ['resume_url'];
 
+    /**
+     * Regras de validação para o modelo
+     */
+    public static $rules = [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:candidates,email',
+        'phone' => 'required|string|max:20',
+        'linkedin_url' => 'nullable|string',
+        'bio' => 'nullable|string',
+        'experiences' => 'nullable'
+    ];
+
     public function getResumeUrlAttribute()
     {
         return $this->resume_path
@@ -73,9 +85,14 @@ class Candidate extends Model
     // Garantir que experiences seja sempre armazenado como JSON
     protected function setExperiencesAttribute($value)
     {
+        if (empty($value)) {
+            $this->attributes['experiences'] = '[]';
+            return;
+        }
+        
         if (is_array($value)) {
             $this->attributes['experiences'] = json_encode($value);
-        } else if (is_string($value) && !empty($value)) {
+        } else if (is_string($value)) {
             // Verifica se já é um JSON válido
             json_decode($value);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -83,14 +100,20 @@ class Candidate extends Model
             } else {
                 // Tenta converter para array e depois para JSON
                 try {
-                    $array = (array)$value;
-                    $this->attributes['experiences'] = json_encode($array);
+                    // Tenta decodificar como string escapada
+                    $decoded = json_decode(stripslashes($value), true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $this->attributes['experiences'] = json_encode($decoded);
+                    } else {
+                        $this->attributes['experiences'] = '[]';
+                    }
                 } catch (\Exception $e) {
-                    $this->attributes['experiences'] = json_encode([]);
+                    $this->attributes['experiences'] = '[]';
+                    \Log::error('Erro ao processar experiences: ' . $e->getMessage());
                 }
             }
         } else {
-            $this->attributes['experiences'] = json_encode([]);
+            $this->attributes['experiences'] = '[]';
         }
     }
 } 

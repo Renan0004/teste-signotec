@@ -53,10 +53,21 @@ class CandidateController extends Controller
             \Log::info('Iniciando criação de candidato');
             \Log::info('Dados recebidos: ' . json_encode($request->all()));
             
+            // Primeiro verificamos se o e-mail já existe
+            $existingCandidate = Candidate::where('email', $request->email)->first();
+            if ($existingCandidate) {
+                return response()->json([
+                    'message' => 'Erro de validação',
+                    'errors' => [
+                        'email' => ['Este e-mail já está cadastrado para outro candidato']
+                    ]
+                ], 422);
+            }
+            
             // Validação simplificada
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:candidates,email',
                 'phone' => 'required|string|max:20',
                 'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // Currículo opcional
                 'bio' => 'nullable|string',
@@ -64,47 +75,98 @@ class CandidateController extends Controller
                 'experiences' => 'nullable|string',
                 'job_ids' => 'required|array',
                 'job_ids.*' => 'exists:jobs,id'
+            ], [
+                'email.unique' => 'Este e-mail já está cadastrado para outro candidato'
             ]);
 
             \Log::info('Validação concluída com sucesso');
             
-            // Criar dados do candidato
+            // Criar dados do candidato - garantindo que os textos sejam UTF-8
             $candidateData = [
-                'name' => $validated['name'],
+                'name' => mb_convert_encoding($validated['name'], 'UTF-8', 'auto'),
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
-                'linkedin_url' => $request->input('linkedin_url'),
-                'bio' => $request->input('bio')
+                'linkedin_url' => $request->input('linkedin_url') ? mb_convert_encoding($request->input('linkedin_url'), 'UTF-8', 'auto') : null,
+                'bio' => $request->input('bio') ? mb_convert_encoding($request->input('bio'), 'UTF-8', 'auto') : null
             ];
 
             // Processar experiências se fornecidas
             if ($request->has('experiences')) {
                 try {
                     \Log::info('Processando experiências: ' . $request->input('experiences'));
-                    $experiences = json_decode($request->input('experiences'), true);
                     
-                    if (is_array($experiences)) {
-                        // Verifica e limpa cada experiência para garantir que não haja problemas com datas
-                        foreach ($experiences as $key => $exp) {
-                            // Garantir que todos os campos sejam strings para evitar problemas de SQL
-                            $experiences[$key]['company'] = (string)($exp['company'] ?? '');
-                            $experiences[$key]['position'] = (string)($exp['position'] ?? '');
-                            $experiences[$key]['description'] = (string)($exp['description'] ?? '');
-                            $experiences[$key]['period'] = (string)($exp['period'] ?? '');
+                    // Garantir que experiences seja um JSON válido
+                    $experiencesInput = $request->input('experiences');
+                    
+                    // Se já for uma string JSON válida
+                    if (is_string($experiencesInput)) {
+                        $decoded = json_decode($experiencesInput, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            // Converter cada campo para UTF-8
+                            foreach ($decoded as $key => $exp) {
+                                if (isset($exp['company'])) {
+                                    $decoded[$key]['company'] = mb_convert_encoding($exp['company'], 'UTF-8', 'auto');
+                                }
+                                if (isset($exp['position'])) {
+                                    $decoded[$key]['position'] = mb_convert_encoding($exp['position'], 'UTF-8', 'auto');
+                                }
+                                if (isset($exp['description'])) {
+                                    $decoded[$key]['description'] = mb_convert_encoding($exp['description'], 'UTF-8', 'auto');
+                                }
+                            }
+                            $candidateData['experiences'] = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+                            \Log::info('Experiências processadas com UTF-8: ' . $candidateData['experiences']);
+                        } else {
+                            // Tenta decodificar como string escapada
+                            $decoded = json_decode(stripslashes($experiencesInput), true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                // Converter cada campo para UTF-8
+                                foreach ($decoded as $key => $exp) {
+                                    if (isset($exp['company'])) {
+                                        $decoded[$key]['company'] = mb_convert_encoding($exp['company'], 'UTF-8', 'auto');
+                                    }
+                                    if (isset($exp['position'])) {
+                                        $decoded[$key]['position'] = mb_convert_encoding($exp['position'], 'UTF-8', 'auto');
+                                    }
+                                    if (isset($exp['description'])) {
+                                        $decoded[$key]['description'] = mb_convert_encoding($exp['description'], 'UTF-8', 'auto');
+                                    }
+                                }
+                                $candidateData['experiences'] = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+                                \Log::info('Experiências convertidas de string escapada para JSON com UTF-8');
+                            } else {
+                                $candidateData['experiences'] = '[]';
+                                \Log::warning('Experiências inválidas, usando array vazio');
+                            }
                         }
-                        
-                        // Armazena como string JSON válida
-                        $candidateData['experiences'] = json_encode($experiences);
-                        \Log::info('Experiências processadas com sucesso: ' . json_encode($experiences));
+                    } else if (is_array($experiencesInput)) {
+                        // Se for um array, codifica diretamente
+                        foreach ($experiencesInput as $key => $exp) {
+                            if (isset($exp['company'])) {
+                                $experiencesInput[$key]['company'] = mb_convert_encoding($exp['company'], 'UTF-8', 'auto');
+                            }
+                            if (isset($exp['position'])) {
+                                $experiencesInput[$key]['position'] = mb_convert_encoding($exp['position'], 'UTF-8', 'auto');
+                            }
+                            if (isset($exp['description'])) {
+                                $experiencesInput[$key]['description'] = mb_convert_encoding($exp['description'], 'UTF-8', 'auto');
+                            }
+                        }
+                        $candidateData['experiences'] = json_encode($experiencesInput, JSON_UNESCAPED_UNICODE);
+                        \Log::info('Experiências convertidas de array para JSON com UTF-8');
                     } else {
-                        \Log::warning('Experiências não são um array válido');
-                        $candidateData['experiences'] = json_encode([]);
+                        // Caso não seja nem string nem array, usa array vazio
+                        $candidateData['experiences'] = '[]';
+                        \Log::warning('Tipo de experiências inválido, usando array vazio');
                     }
                 } catch (\Exception $e) {
-                    \Log::error('Erro ao decodificar experiências: ' . $e->getMessage());
+                    \Log::error('Erro ao processar experiências: ' . $e->getMessage());
                     \Log::error($e->getTraceAsString());
-                    $candidateData['experiences'] = json_encode([]);
+                    $candidateData['experiences'] = '[]';
                 }
+            } else {
+                $candidateData['experiences'] = '[]';
+                \Log::info('Nenhuma experiência fornecida, usando array vazio');
             }
 
             // Upload do currículo se fornecido
@@ -127,6 +189,24 @@ class CandidateController extends Controller
                 'message' => 'Candidato criado com sucesso',
                 'candidate' => $candidate
             ], 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Erro de banco de dados ao criar candidato: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            // Verifica se é um erro de chave duplicada (e-mail)
+            if ($e->errorInfo[1] == 1062) {
+                return response()->json([
+                    'message' => 'Erro de validação',
+                    'errors' => [
+                        'email' => ['Este e-mail já está cadastrado para outro candidato']
+                    ]
+                ], 422);
+            }
+            
+            return response()->json([
+                'message' => 'Erro ao criar candidato',
+                'error' => $e->getMessage()
+            ], 500);
         } catch (\Exception $e) {
             \Log::error('Erro ao criar candidato: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -168,6 +248,23 @@ class CandidateController extends Controller
                 'job_ids' => 'nullable|array',
                 'job_ids.*' => 'exists:jobs,id'
             ]);
+
+            // Processar dados com codificação UTF-8
+            if (isset($validated['name'])) {
+                $validated['name'] = mb_convert_encoding($validated['name'], 'UTF-8', 'auto');
+            }
+            if (isset($validated['bio'])) {
+                $validated['bio'] = mb_convert_encoding($validated['bio'], 'UTF-8', 'auto');
+            }
+            if (isset($validated['linkedin_url'])) {
+                $validated['linkedin_url'] = mb_convert_encoding($validated['linkedin_url'], 'UTF-8', 'auto');
+            }
+            if (isset($validated['github_url'])) {
+                $validated['github_url'] = mb_convert_encoding($validated['github_url'], 'UTF-8', 'auto');
+            }
+            if (isset($validated['portfolio_url'])) {
+                $validated['portfolio_url'] = mb_convert_encoding($validated['portfolio_url'], 'UTF-8', 'auto');
+            }
 
             if ($request->hasFile('resume')) {
                 if ($candidate->resume_path) {
@@ -218,14 +315,30 @@ class CandidateController extends Controller
             
             \Log::info('Excluindo candidato: ' . $candidate->id . ' - ' . $candidate->name);
             
+            // Remover relacionamentos primeiro
+            $candidate->jobs()->detach();
+            \Log::info('Relacionamentos com vagas removidos');
+            
+            // Excluir arquivo de currículo, se existir
             if ($candidate->resume_path) {
                 Storage::disk('public')->delete($candidate->resume_path);
+                \Log::info('Currículo removido: ' . $candidate->resume_path);
             }
             
-            $candidate->delete();
-            \Log::info('Candidato excluído com sucesso: ' . $id);
+            // Excluir o candidato permanentemente (hard delete)
+            $result = $candidate->forceDelete();
+            \Log::info('Resultado da exclusão permanente: ' . ($result ? 'Sucesso' : 'Falha'));
             
-            return response()->json(['message' => 'Candidato excluído com sucesso']);
+            if ($result) {
+                \Log::info('Candidato excluído permanentemente com sucesso: ' . $id);
+                return response()->json(['message' => 'Candidato excluído com sucesso']);
+            } else {
+                \Log::error('Falha ao excluir candidato: ' . $id);
+                return response()->json([
+                    'message' => 'Falha ao excluir candidato',
+                    'error' => 'Operação de exclusão falhou'
+                ], 500);
+            }
         } catch (\Exception $e) {
             \Log::error('Erro ao excluir candidato: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -321,12 +434,30 @@ class CandidateController extends Controller
             if ($request->input('_method') === 'DELETE') {
                 \Log::info('Processando exclusão do candidato ID: ' . $candidateId);
                 
+                // Remover relacionamentos primeiro
+                $candidate->jobs()->detach();
+                \Log::info('Relacionamentos com vagas removidos');
+                
+                // Excluir arquivo de currículo, se existir
                 if ($candidate->resume_path) {
                     Storage::disk('public')->delete($candidate->resume_path);
+                    \Log::info('Currículo removido: ' . $candidate->resume_path);
                 }
-                $candidate->delete();
-                \Log::info('Candidato excluído com sucesso: ' . $candidateId);
-                return response()->json(['message' => 'Candidato excluído com sucesso']);
+                
+                // Excluir o candidato permanentemente (hard delete)
+                $result = $candidate->forceDelete();
+                \Log::info('Resultado da exclusão permanente: ' . ($result ? 'Sucesso' : 'Falha'));
+                
+                if ($result) {
+                    \Log::info('Candidato excluído permanentemente com sucesso: ' . $candidateId);
+                    return response()->json(['message' => 'Candidato excluído com sucesso']);
+                } else {
+                    \Log::error('Falha ao excluir candidato: ' . $candidateId);
+                    return response()->json([
+                        'message' => 'Falha ao excluir candidato',
+                        'error' => 'Operação de exclusão falhou'
+                    ], 500);
+                }
             }
             // Verificar se é uma requisição de atualização
             else {

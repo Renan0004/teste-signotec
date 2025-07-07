@@ -1,29 +1,36 @@
-# Sistema de Vagas - Frontend
+# Frontend do Sistema de Gerenciamento de Vagas - SignoTech
 
-Frontend do sistema de gerenciamento de vagas e candidatos desenvolvido com React e Material-UI.
+Interface de usuário do sistema de gerenciamento de vagas e candidatos desenvolvido com React e Material-UI.
 
 ## Tecnologias Utilizadas
 
 - React 18
 - Material-UI 5
 - React Router 6
-- Axios
-- Notistack
-- Date-fns
+- Axios (comunicação com a API)
+- Notistack (notificações)
+- Date-fns (manipulação de datas)
+- Context API (gerenciamento de estado)
 
 ## Funcionalidades
 
-- Autenticação de usuários
-- Gerenciamento de vagas
+- **Autenticação de Usuários**
+  - Login e registro
+  - Proteção de rotas
+  - Gerenciamento de tokens
+
+- **Gerenciamento de Vagas**
   - Listagem com paginação e busca
   - Criação, edição e exclusão
-  - Status da vaga
+  - Controle de status (aberta, fechada, em andamento)
   - Requisitos e benefícios
-- Gerenciamento de candidatos
+
+- **Gerenciamento de Candidatos**
   - Listagem com paginação e busca
   - Criação, edição e exclusão
   - Upload de currículo
-  - Informações profissionais
+  - Experiências profissionais
+  - Vinculação com vagas
 
 ## Pré-requisitos
 
@@ -32,10 +39,9 @@ Frontend do sistema de gerenciamento de vagas e candidatos desenvolvido com Reac
 
 ## Instalação
 
-1. Clone o repositório:
+1. Clone o repositório e acesse a pasta do frontend:
 ```bash
-git clone https://github.com/seu-usuario/teste-signotec.git
-cd teste-signotec/frontend
+cd frontend
 ```
 
 2. Instale as dependências:
@@ -55,7 +61,7 @@ REACT_APP_API_URL=http://localhost:8000/api
 npm start
 ```
 
-2. Acesse o sistema em: [http://localhost:3000](http://localhost:3000)
+2. Acesse o sistema em: http://localhost:3000 ou http://localhost:3001
 
 ## Build para Produção
 
@@ -69,68 +75,6 @@ npm run build
 ## Estrutura do Projeto
 
 ```
-src/
-  ├── components/       # Componentes reutilizáveis
-  ├── contexts/        # Contextos do React
-  ├── layouts/         # Layouts da aplicação
-  ├── pages/          # Páginas/rotas
-  ├── services/       # Serviços e API
-  ├── theme/          # Configuração do tema
-  ├── config/         # Configurações globais
-  └── App.js          # Componente principal
-```
-
-## Convenções de Código
-
-- Componentes em PascalCase
-- Arquivos de componente: index.js
-- Hooks personalizados com prefixo "use"
-- Estilos com Material-UI sx prop
-- Prettier para formatação
-- ESLint para linting
-
-## Contribuindo
-
-1. Crie uma branch para sua feature
-2. Faça commit das alterações
-3. Push para a branch
-4. Crie um Pull Request
-
-## Licença
-
-Este projeto está sob a licença MIT.
-
-src/
-  ├── components/       # Componentes reutilizáveis
-  ├── contexts/        # Contextos do React
-  ├── layouts/         # Layouts da aplicação
-  ├── pages/          # Páginas/rotas
-  ├── services/       # Serviços e API
-  ├── theme/          # Configuração do tema
-  ├── config/         # Configurações globais
-  └── App.js          # Componente principal
-```
-
-## Convenções de Código
-
-- Componentes em PascalCase
-- Arquivos de componente: index.js
-- Hooks personalizados com prefixo "use"
-- Estilos com Material-UI sx prop
-- Prettier para formatação
-- ESLint para linting
-
-## Contribuindo
-
-1. Crie uma branch para sua feature
-2. Faça commit das alterações
-3. Push para a branch
-4. Crie um Pull Request
-
-## Licença
-
-Este projeto está sob a licença MIT.
-
 src/
   ├── components/       # Componentes reutilizáveis
   ├── contexts/        # Contextos do React

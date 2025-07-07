@@ -210,9 +210,9 @@ const CandidateList = () => {
 
     try {
       console.log("Excluindo candidato:", id);
-      await api.post(`/candidates/${id}`, {
-        _method: 'DELETE'
-      });
+      
+      // Usar o serviço de candidatos para excluir
+      await candidatesService.delete(id);
       
       console.log("Candidato excluído com sucesso");
       await fetchCandidates();
@@ -524,7 +524,7 @@ const CandidateList = () => {
                         <IconButton onClick={() => handleEdit(candidate)}>
                           <EditIcon />
                         </IconButton>
-                        <IconButton onClick={() => handleDeleteClick(candidate)}>
+                        <IconButton onClick={() => handleDeleteClick(candidate)} sx={{ color: 'error.main', '&:hover': { bgcolor: 'rgba(211,47,47,0.08)' } }}>
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>

@@ -45,29 +45,29 @@ const FormModal = ({
         p: 2, 
         borderBottom: '1px solid', 
         borderColor: 'divider',
-        display: 'flex',
+              display: 'flex', 
         justifyContent: 'space-between',
-        alignItems: 'center',
+              alignItems: 'center',
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText
-      }}>
+            }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
-          {title}
-        </Typography>
-        {!loading && (
-          <IconButton
-            edge="end"
-            onClick={onClose}
-            aria-label="close"
+                {title}
+              </Typography>
+              {!loading && (
+                <IconButton
+                  edge="end"
+                  onClick={onClose}
+                  aria-label="close"
             sx={{ color: 'inherit' }}
-          >
-            <CloseIcon />
-          </IconButton>
-        )}
+                >
+                  <CloseIcon />
+                </IconButton>
+              )}
       </DialogTitle>
 
       <DialogContent 
-        sx={{ 
+                sx={{
           p: 2, 
           pt: 3,
           '&::-webkit-scrollbar': {
@@ -81,9 +81,9 @@ const FormModal = ({
           '&::-webkit-scrollbar-track': {
             borderRadius: '4px',
             backgroundColor: '#f5f5f5',
-          }
-        }}
-      >
+                  }
+                }}
+              >
         <Box sx={{ minHeight: isMobile ? 'auto' : '200px' }}>
           {children}
         </Box>

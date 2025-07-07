@@ -281,7 +281,16 @@ const JobList = () => {
   }
 
   const renderFilters = () => (
-    <Box sx={{ mb: 3 }}>
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        mb: 3, 
+        p: { xs: 2, sm: 3 },
+        border: '1px solid #e0e0e0',
+        borderRadius: '8px',
+        backgroundColor: '#fafafa'
+      }}
+    >
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={6} md={4}>
           <TextField
@@ -293,49 +302,227 @@ const JobList = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon color="action" />
                 </InputAdornment>
               ),
             }}
             size={isMobile ? "small" : "medium"}
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: 1,
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: 'primary.main',
+                },
+              },
+            }}
           />
         </Grid>
         <Grid item xs={6} sm={3} md={2}>
-          <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+          <FormControl 
+            fullWidth 
+            size={isMobile ? "small" : "medium"}
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: 1,
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: 'primary.main',
+                },
+              },
+            }}
+          >
             <InputLabel>Status</InputLabel>
             <Select
               name="status"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               label="Status"
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    maxHeight: 300,
+                    '& .MuiMenuItem-root': {
+                      py: 1,
+                    },
+                  },
+                },
+              }}
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="aberta">Aberta</MenuItem>
-              <MenuItem value="fechada">Fechada</MenuItem>
-              <MenuItem value="em_andamento">Em Andamento</MenuItem>
+              <MenuItem value="aberta">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#2e7d32', 
+                    mr: 1 
+                  }} />
+                  Aberta
+                </Box>
+              </MenuItem>
+              <MenuItem value="fechada">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#c62828', 
+                    mr: 1 
+                  }} />
+                  Fechada
+                </Box>
+              </MenuItem>
+              <MenuItem value="em_andamento">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#f57f17', 
+                    mr: 1 
+                  }} />
+                  Em Andamento
+                </Box>
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={6} sm={3} md={2}>
-          <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+          <FormControl 
+            fullWidth 
+            size={isMobile ? "small" : "medium"}
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: 1,
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: 'primary.main',
+                },
+              },
+            }}
+          >
             <InputLabel>Tipo</InputLabel>
             <Select
               name="type"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               label="Tipo"
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    maxHeight: 300,
+                    '& .MuiMenuItem-root': {
+                      py: 1,
+                    },
+                  },
+                },
+              }}
             >
               <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="full_time">Tempo Integral</MenuItem>
-              <MenuItem value="part_time">Meio Período</MenuItem>
-              <MenuItem value="contract">Contrato</MenuItem>
-              <MenuItem value="temporary">Temporário</MenuItem>
-              <MenuItem value="internship">Estágio</MenuItem>
+              <MenuItem value="full_time">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#1565c0', 
+                    mr: 1 
+                  }} />
+                  Tempo Integral
+                </Box>
+              </MenuItem>
+              <MenuItem value="part_time">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#2e7d32', 
+                    mr: 1 
+                  }} />
+                  Meio Período
+                </Box>
+              </MenuItem>
+              <MenuItem value="contract">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#f57f17', 
+                    mr: 1 
+                  }} />
+                  Contrato
+                </Box>
+              </MenuItem>
+              <MenuItem value="temporary">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#c2185b', 
+                    mr: 1 
+                  }} />
+                  Temporário
+                </Box>
+              </MenuItem>
+              <MenuItem value="internship">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    width: 10, 
+                    height: 10, 
+                    borderRadius: '50%', 
+                    backgroundColor: '#00695c', 
+                    mr: 1 
+                  }} />
+                  Estágio
+                </Box>
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              variant="outlined" 
+              onClick={() => {
+                setSearchTerm('');
+                setFilterStatus('all');
+                setFilterType('all');
+              }}
+              startIcon={<FilterListIcon />}
+              size={isMobile ? "small" : "medium"}
+              sx={{ 
+                borderColor: '#bdbdbd', 
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderColor: '#9e9e9e',
+                }
+              }}
+            >
+              Limpar Filtros
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={fetchJobs}
+              size={isMobile ? "small" : "medium"}
+              sx={{ 
+                boxShadow: 'none',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                }
+              }}
+            >
+              Aplicar
+            </Button>
+          </Box>
+        </Grid>
       </Grid>
-    </Box>
+    </Paper>
   );
 
   const renderMobileView = () => (
@@ -349,29 +536,104 @@ const JobList = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                position: 'relative'
+                position: 'relative',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '1px solid #f0f0f0'
               }}
             >
-              <CardContent sx={{ flex: 1, pb: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Typography variant="h6" component="h2" gutterBottom>
+              <Box 
+                sx={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  right: 0,
+                  borderBottomLeftRadius: '8px',
+                  overflow: 'hidden',
+                  zIndex: 2
+                }}
+              >
+                <Chip
+                  label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
+                  sx={{
+                    fontWeight: 'medium',
+                    backgroundColor: job.status === 'aberta' ? '#e8f5e9' : 
+                                    job.status === 'fechada' ? '#ffebee' : '#fff8e1',
+                    color: job.status === 'aberta' ? '#2e7d32' : 
+                          job.status === 'fechada' ? '#c62828' : '#f57f17',
+                    borderRadius: '0 8px 0 8px',
+                    height: '28px',
+                    '& .MuiChip-label': {
+                      px: 2
+                    }
+                  }}
+                  size="small"
+                />
+              </Box>
+
+              <CardContent sx={{ flex: 1, pb: 1, pt: 3 }}>
+                <Tooltip title={job.title} enterDelay={700}>
+                  <Typography 
+                    variant="h6" 
+                    component="h2" 
+                    gutterBottom 
+                    sx={{ 
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                      mb: 1,
+                      pr: 8, // Espaço para o status
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '100%'
+                    }}
+                  >
                     {job.title}
                   </Typography>
-                  <Chip
-                    label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
-                    color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
-                    size="small"
-                    sx={{ ml: 1 }}
-                  />
+                </Tooltip>
+
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' }, 
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  mb: 1,
+                  gap: { xs: 0.5, sm: 0 }
+                }}>
+                  <Tooltip title={job.company} enterDelay={700}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%'
+                      }}
+                    >
+                      {job.company}
+                    </Typography>
+                  </Tooltip>
+                  <Tooltip title={job.location} enterDelay={700}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        ml: { xs: 0, sm: 2 },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%'
+                      }}
+                    >
+                      {isMobile ? job.location : `• ${job.location}`}
+                    </Typography>
+                  </Tooltip>
                 </Box>
-
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {job.company}
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {job.location}
-                </Typography>
 
                 <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
                   <Chip
@@ -380,12 +642,34 @@ const JobList = () => {
                            job.type === 'contract' ? 'Contrato' : 
                            job.type === 'temporary' ? 'Temporário' : 'Estágio'}
                     size="small"
-                    variant="outlined"
+                    sx={{
+                      fontWeight: 'medium',
+                      backgroundColor: job.type === 'full_time' ? '#e3f2fd' :
+                                      job.type === 'part_time' ? '#e8f5e9' :
+                                      job.type === 'contract' ? '#fff8e1' :
+                                      job.type === 'temporary' ? '#fce4ec' : '#e0f2f1',
+                      color: job.type === 'full_time' ? '#1565c0' :
+                            job.type === 'part_time' ? '#2e7d32' :
+                            job.type === 'contract' ? '#f57f17' :
+                            job.type === 'temporary' ? '#c2185b' : '#00695c',
+                      border: 'none',
+                      maxWidth: '100%',
+                      overflow: 'hidden'
+                    }}
                   />
                   <Chip
-                    label={`R$ ${job.salary.toLocaleString()}`}
+                    label={typeof job.salary === 'number' 
+                      ? `R$ ${job.salary.toLocaleString()}`
+                      : job.salary}
                     size="small"
-                    variant="outlined"
+                    sx={{
+                      fontWeight: 'medium',
+                      backgroundColor: '#f3f3f3',
+                      color: 'text.primary',
+                      border: 'none',
+                      maxWidth: '100%',
+                      overflow: 'hidden'
+                    }}
                   />
                 </Stack>
 
@@ -397,18 +681,31 @@ const JobList = () => {
                     WebkitLineClamp: 3,
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
-                    mb: 2
+                    mb: 2,
+                    lineHeight: 1.5
                   }}
                 >
                   {job.description}
                 </Typography>
               </CardContent>
 
-              <CardActions sx={{ p: 2, pt: 0, justifyContent: 'flex-end' }}>
+              <CardActions 
+                sx={{ 
+                  p: 2, 
+                  pt: 0, 
+                  justifyContent: 'flex-end',
+                  borderTop: '1px solid #f0f0f0',
+                  backgroundColor: '#fafafa'
+                }}
+              >
                 <Button
                   size="small"
                   startIcon={<EditIcon />}
                   onClick={() => handleEdit(job)}
+                  sx={{
+                    color: 'primary.main',
+                    fontWeight: 500
+                  }}
                 >
                   Editar
                 </Button>
@@ -417,6 +714,9 @@ const JobList = () => {
                   color="error"
                   startIcon={<DeleteIcon />}
                   onClick={() => handleDelete([job.id])}
+                  sx={{
+                    fontWeight: 500
+                  }}
                 >
                   Excluir
                 </Button>
@@ -424,6 +724,15 @@ const JobList = () => {
             </Card>
           </Grid>
         ))}
+        {jobs.length === 0 && (
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                Nenhuma vaga encontrada
+              </Typography>
+            </Paper>
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
@@ -436,6 +745,8 @@ const JobList = () => {
           mb: 2, 
           maxWidth: '100%', 
           overflow: 'auto',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          borderRadius: '8px',
           '&::-webkit-scrollbar': {
             height: '8px',
           },
@@ -445,98 +756,217 @@ const JobList = () => {
           }
         }}
       >
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead>
-            <TableRow>
+        <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableCell padding="checkbox" sx={{ width: '48px' }}>
+              <Checkbox
+                indeterminate={selectedJobs.length > 0 && selectedJobs.length < jobs.length}
+                checked={jobs.length > 0 && selectedJobs.length === jobs.length}
+                onChange={handleSelectAll}
+              />
+            </TableCell>
+            <TableCell sx={{ width: '22%' }}>
+              <TableSortLabel
+                active={sortBy === 'title'}
+                direction={sortDirection}
+                onClick={() => handleSort('title')}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">Título</Typography>
+              </TableSortLabel>
+            </TableCell>
+            <TableCell sx={{ width: '18%' }}>
+              <Typography variant="subtitle2" fontWeight="bold">Empresa</Typography>
+            </TableCell>
+            <TableCell sx={{ width: '15%' }}>
+              <Typography variant="subtitle2" fontWeight="bold">Local</Typography>
+            </TableCell>
+            <TableCell sx={{ width: '12%' }}>
+              <TableSortLabel
+                active={sortBy === 'salary'}
+                direction={sortDirection}
+                onClick={() => handleSort('salary')}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">Salário</Typography>
+              </TableSortLabel>
+            </TableCell>
+            <TableCell sx={{ width: '12%' }}>
+              <Typography variant="subtitle2" fontWeight="bold">Tipo</Typography>
+            </TableCell>
+            <TableCell sx={{ width: '11%' }}>
+              <Typography variant="subtitle2" fontWeight="bold">Status</Typography>
+            </TableCell>
+            <TableCell align="right" sx={{ width: '10%' }}>
+              <Typography variant="subtitle2" fontWeight="bold">Ações</Typography>
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {jobs.map((job) => (
+            <TableRow
+              hover
+              key={job.id}
+              selected={selectedJobs.includes(job.id)}
+              sx={{ 
+                '&:last-child td, &:last-child th': { border: 0 },
+                '&:hover': { backgroundColor: '#f9f9f9' }
+              }}
+            >
               <TableCell padding="checkbox">
                 <Checkbox
-                  indeterminate={selectedJobs.length > 0 && selectedJobs.length < jobs.length}
-                  checked={jobs.length > 0 && selectedJobs.length === jobs.length}
-                  onChange={handleSelectAll}
+                  checked={selectedJobs.includes(job.id)}
+                  onChange={() => handleSelectJob(job.id)}
                 />
               </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={sortBy === 'title'}
-                  direction={sortDirection}
-                  onClick={() => handleSort('title')}
-                >
-                  Título
-                </TableSortLabel>
+              <TableCell component="th" scope="row" sx={{ 
+                maxWidth: '22%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                <Tooltip title={job.title} enterDelay={700}>
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="medium"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {job.title}
+                  </Typography>
+                </Tooltip>
               </TableCell>
-              <TableCell>Empresa</TableCell>
-              <TableCell>Local</TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={sortBy === 'salary'}
-                  direction={sortDirection}
-                  onClick={() => handleSort('salary')}
-                >
-                  Salário
-                </TableSortLabel>
+              <TableCell sx={{ 
+                maxWidth: '18%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                <Tooltip title={job.company} enterDelay={700}>
+                  <Typography 
+                    variant="body2"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {job.company}
+                  </Typography>
+                </Tooltip>
               </TableCell>
-              <TableCell>Tipo</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Ações</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {jobs.map((job) => (
-              <TableRow
-                hover
-                key={job.id}
-                selected={selectedJobs.includes(job.id)}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={selectedJobs.includes(job.id)}
-                    onChange={() => handleSelectJob(job.id)}
-                  />
-                </TableCell>
-                <TableCell component="th" scope="row">
-                  <Typography variant="subtitle2">{job.title}</Typography>
-                </TableCell>
-                <TableCell>{job.company}</TableCell>
-                <TableCell>{job.location}</TableCell>
-                <TableCell>R$ {job.salary.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip label={job.type === 'full_time' ? 'Tempo Integral' : 
-                             job.type === 'part_time' ? 'Meio Período' : 
-                             job.type === 'contract' ? 'Contrato' : 
-                             job.type === 'temporary' ? 'Temporário' : 'Estágio'}
-                      size="small"
-                      variant="outlined"
-                    />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
-                    color={job.status === 'aberta' ? 'success' : job.status === 'fechada' ? 'error' : 'warning'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
+              <TableCell sx={{ 
+                maxWidth: '15%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                <Tooltip title={job.location} enterDelay={700}>
+                  <Typography 
+                    variant="body2"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {job.location}
+                  </Typography>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={{ width: '12%' }}>
+                <Typography variant="body2" fontWeight="medium">
+                  {typeof job.salary === 'number' 
+                    ? `R$ ${job.salary.toLocaleString()}`
+                    : job.salary}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ width: '12%', padding: '8px 16px' }}>
+                <Chip 
+                  label={
+                    job.type === 'full_time' ? 'Tempo Integral' : 
+                    job.type === 'part_time' ? 'Meio Período' : 
+                    job.type === 'contract' ? 'Contrato' : 
+                    job.type === 'temporary' ? 'Temporário' : 'Estágio'
+                  }
+                  size="small"
+                  sx={{
+                    fontWeight: 'medium',
+                    backgroundColor: job.type === 'full_time' ? '#e3f2fd' :
+                                    job.type === 'part_time' ? '#e8f5e9' :
+                                    job.type === 'contract' ? '#fff8e1' :
+                                    job.type === 'temporary' ? '#fce4ec' : '#e0f2f1',
+                    color: job.type === 'full_time' ? '#1565c0' :
+                          job.type === 'part_time' ? '#2e7d32' :
+                          job.type === 'contract' ? '#f57f17' :
+                          job.type === 'temporary' ? '#c2185b' : '#00695c',
+                    border: 'none',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
+                  }}
+                />
+              </TableCell>
+              <TableCell sx={{ width: '11%', padding: '8px 16px' }}>
+                <Chip
+                  label={job.status === 'aberta' ? 'Aberta' : job.status === 'fechada' ? 'Fechada' : 'Em Andamento'}
+                  sx={{
+                    fontWeight: 'medium',
+                    backgroundColor: job.status === 'aberta' ? '#e8f5e9' : 
+                                    job.status === 'fechada' ? '#ffebee' : '#fff8e1',
+                    color: job.status === 'aberta' ? '#2e7d32' : 
+                          job.status === 'fechada' ? '#c62828' : '#f57f17',
+                    border: 'none',
+                    minWidth: '90px',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
+                  }}
+                  size="small"
+                />
+              </TableCell>
+              <TableCell align="right" sx={{ width: '10%', padding: '4px 16px' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Tooltip title="Editar">
-                    <IconButton size="small" onClick={() => handleEdit(job)}>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => handleEdit(job)}
+                      sx={{ 
+                        color: 'primary.main',
+                        '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' }
+                      }}
+                    >
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Excluir">
                     <IconButton
                       size="small"
-                      color="error"
+                      sx={{ 
+                        color: 'error.main',
+                        '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08)' }
+                      }}
                       onClick={() => handleDelete([job.id])}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+          {jobs.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+                <Typography variant="body1" color="text.secondary">
+                  Nenhuma vaga encontrada
+                </Typography>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
     </Box>
   );
 
@@ -558,8 +988,8 @@ const JobList = () => {
           width: '100%'
         }}>
           <Typography variant="h4" component="h1" sx={{ mb: { xs: 0, sm: 0 } }}>
-            Vagas
-          </Typography>
+          Vagas
+        </Typography>
           
           <Button
             variant="contained"
