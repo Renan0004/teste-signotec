@@ -8,9 +8,66 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * @OA\Tag(
+ *     name="Jobs",
+ *     description="API Endpoints de vagas"
+ * )
+ */
 class JobController extends Controller
 {
-    // Mostrar todas as vagas
+    /**
+     * @OA\Get(
+     *     path="/api/jobs",
+     *     summary="Listar todas as vagas",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filtrar por status",
+     *         @OA\Schema(type="string", enum={"aberta", "fechada", "em_andamento", "all"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Filtrar por tipo",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Termo de busca",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort_by",
+     *         in="query",
+     *         description="Campo para ordenação",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort_direction",
+     *         in="query",
+     *         description="Direção da ordenação",
+     *         @OA\Schema(type="string", enum={"asc", "desc"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Itens por página",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de vagas"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao buscar vagas"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function index(Request $request): JsonResponse
     {
         try {
@@ -55,7 +112,40 @@ class JobController extends Controller
         }
     }
 
-    // Criar uma nova vaga
+    /**
+     * @OA\Post(
+     *     path="/api/jobs",
+     *     summary="Criar uma nova vaga",
+     *     tags={"Jobs"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title", "description", "company", "location", "status", "type", "requirements"},
+     *             @OA\Property(property="title", type="string", example="Desenvolvedor PHP"),
+     *             @OA\Property(property="description", type="string", example="Vaga para desenvolvedor PHP"),
+     *             @OA\Property(property="company", type="string", example="SignoTech"),
+     *             @OA\Property(property="location", type="string", example="São Paulo"),
+     *             @OA\Property(property="status", type="string", enum={"aberta", "fechada", "em_andamento"}, example="aberta"),
+     *             @OA\Property(property="type", type="string", example="full_time"),
+     *             @OA\Property(property="requirements", type="string", example="[\"PHP\", \"Laravel\", \"MySQL\"]"),
+     *             @OA\Property(property="benefits", type="string", example="[\"VR\", \"VT\", \"Plano de saúde\"]")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Vaga criada com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao criar vaga"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -103,13 +193,75 @@ class JobController extends Controller
         }
     }
 
-    // Mostrar uma vaga específica
+    /**
+     * @OA\Get(
+     *     path="/api/jobs/{job}",
+     *     summary="Obter detalhes de uma vaga",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="job",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalhes da vaga"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Vaga não encontrada"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function show(Job $job): JsonResponse
     {
         return response()->json($job);
     }
 
-    // Atualizar uma vaga existente
+    /**
+     * @OA\Put(
+     *     path="/api/jobs/{job}",
+     *     summary="Atualizar uma vaga",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="job",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title", "description", "company", "location", "status", "type", "requirements"},
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="company", type="string"),
+     *             @OA\Property(property="location", type="string"),
+     *             @OA\Property(property="status", type="string", enum={"aberta", "fechada", "em_andamento"}),
+     *             @OA\Property(property="type", type="string"),
+     *             @OA\Property(property="requirements", type="string"),
+     *             @OA\Property(property="benefits", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Vaga atualizada com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao atualizar vaga"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function update(Request $request, Job $job): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -157,7 +309,29 @@ class JobController extends Controller
         }
     }
 
-    // Deletar uma vaga
+    /**
+     * @OA\Delete(
+     *     path="/api/jobs/{job}",
+     *     summary="Excluir uma vaga",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="job",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Vaga excluída com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao excluir vaga"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function destroy(Request $request): JsonResponse
     {
         try {
@@ -187,20 +361,88 @@ class JobController extends Controller
         }
     }
 
-    // Buscar candidatos aplicados para uma vaga
+    /**
+     * @OA\Get(
+     *     path="/api/jobs/{job}/candidates",
+     *     summary="Listar candidatos de uma vaga",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="job",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de candidatos"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function candidates(Job $job): JsonResponse
     {
         return response()->json($job->candidates()->paginate(20));
     }
 
-    // Buscar candidatos aplicados para uma vaga
+    /**
+     * @OA\Get(
+     *     path="/api/jobs/{job}/candidates/all",
+     *     summary="Listar todos os candidatos de uma vaga",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="job",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista completa de candidatos"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function getCandidatesForJob(Job $job): JsonResponse
     {
         $candidates = $job->candidates()->get();
         return response()->json($candidates);
     }
 
-    // Método para lidar com requisições POST para update ou delete
+    /**
+     * @OA\Post(
+     *     path="/api/jobs/{jobId}",
+     *     summary="Atualizar ou excluir uma vaga via POST",
+     *     tags={"Jobs"},
+     *     @OA\Parameter(
+     *         name="jobId",
+     *         in="path",
+     *         required=true,
+     *         description="ID da vaga",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="_method", type="string", enum={"PUT", "DELETE"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Operação realizada com sucesso"
+     *     ),
+     *     @OA\Response(
+     *         response=405,
+     *         description="Método não suportado"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao processar requisição"
+     *     ),
+     *     security={{"sanctum":{}}}
+     * )
+     */
     public function updateOrDestroy(Request $request, $jobId): JsonResponse
     {
         try {

@@ -15,7 +15,7 @@ class JobTest extends TestCase
     {
         $job = Job::factory()->create();
         $this->assertInstanceOf(Job::class, $job);
-        $this->assertDatabaseHas('job_positions', ['id' => $job->id]);
+        $this->assertDatabaseHas('jobs', ['id' => $job->id]);
     }
 
     public function test_can_update_job()
@@ -29,7 +29,7 @@ class JobTest extends TestCase
     {
         $job = Job::factory()->create();
         $job->delete();
-        $this->assertDatabaseMissing('job_positions', ['id' => $job->id]);
+        $this->assertDatabaseMissing('jobs', ['id' => $job->id]);
     }
 
     public function test_can_attach_candidates()
@@ -71,20 +71,20 @@ class JobTest extends TestCase
         $this->assertTrue($job->candidates->contains($candidates->first()));
     }
 
-    public function test_can_toggle_active_status()
+    public function test_can_toggle_status()
     {
-        $job = Job::factory()->create(['is_active' => true]);
+        $job = Job::factory()->create(['status' => 'aberta']);
         
-        $job->update(['is_active' => false]);
-        $this->assertFalse($job->fresh()->is_active);
+        $job->update(['status' => 'fechada']);
+        $this->assertEquals('fechada', $job->fresh()->status);
         
-        $job->update(['is_active' => true]);
-        $this->assertTrue($job->fresh()->is_active);
+        $job->update(['status' => 'aberta']);
+        $this->assertEquals('aberta', $job->fresh()->status);
     }
 
-    public function test_has_valid_contract_type()
+    public function test_has_valid_job_type()
     {
         $job = Job::factory()->create();
-        $this->assertContains($job->contract_type, ['CLT', 'PJ', 'FREELANCER']);
+        $this->assertContains($job->type, ['full_time', 'part_time', 'contract', 'temporary', 'internship']);
     }
 } 
